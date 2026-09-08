@@ -60,6 +60,18 @@ export const CHAPTERS: ChapterMeta[] = [
     title: "Transfer function models",
     blurb: "How an input series drives an output, plus noise.",
   },
+  {
+    id: "unity",
+    num: "10",
+    title: "Time series in Unity",
+    blurb: "Fixed physics ticks, uneven frames, cameras, and prediction.",
+  },
+  {
+    id: "godot",
+    num: "11",
+    title: "Time series in Godot",
+    blurb: "Idle vs physics clocks, tweens as impulse responses, move-toward.",
+  },
 ];
 
 export const EXTRA = [

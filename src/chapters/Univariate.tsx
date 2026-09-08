@@ -1,7 +1,19 @@
 import { useMemo, useState } from "react";
 import { LineChart, StemChart } from "../components/Charts";
 import { M } from "../components/MathTex";
-import { Callout, Chapter, Lab, Quiz, Slider, Stat } from "../components/UI";
+import {
+  Callout,
+  Card,
+  Cards,
+  Chapter,
+  Formula,
+  Lab,
+  Quiz,
+  Slider,
+  Stat,
+  Takeaway,
+  TryThis,
+} from "../components/UI";
 import {
   acf,
   addTrendSeason,
@@ -34,55 +46,47 @@ export function Univariate() {
     <Chapter
       kicker="Chapter 02"
       title="Univariate models: trend, seasonality, correlated errors"
-      lede="The first model of a single series is a sum of slow movement, calendar pattern, and leftover noise. The leftover is rarely white."
+      lede="Split a series into slow drift, a calendar repeat, and leftover noise. The leftover usually still remembers the past."
     >
+      <Takeaway>
+        Fit the obvious mean first. Then treat the leftovers as their own series.
+      </Takeaway>
+
       <section className="prose">
-        <h2>A working decomposition</h2>
-        <p>
-          A useful starting point is
-        </p>
-        <M block expr="Y_t = T_t + S_t + \varepsilon_t." />
-        <p>
-          <M expr="T_t" /> is trend: a slow level, often a line or a gentle curve.{" "}
-          <M expr="S_t" /> is seasonality: a repeating shape with a known period,
-          such as 12 for months or 7 for weekdays. <M expr="\varepsilon_t" /> is
-          the irregular piece.
-        </p>
-        <p>
-          Trend can be parametric, as in <M expr="T_t=\beta_0+\beta_1 t" />, or
-          more flexible. Seasonality can be dummy indicators (one coefficient per
-          month) or a short Fourier pair,
-        </p>
-        <M
-          block
-          expr="S_t = a\cos(2\pi t/d)+b\sin(2\pi t/d),"
+        <h2>Three pieces</h2>
+        <Formula
+          expr="Y_t = T_t + S_t + \varepsilon_t"
+          plain="Trend plus season plus irregular. Start here before you reach for ARMA."
         />
+        <Cards>
+          <Card title="Trend">
+            Slow level. Often a line, sometimes a gentle curve.
+          </Card>
+          <Card title="Season">
+            A known repeat: 12 for months, 7 for weekdays.
+          </Card>
+          <Card title="Irregular">
+            What is left. Rarely white. Inspect its ACF.
+          </Card>
+          <Card title="A cheap season">
+            A sine and cosine at period d. Extra harmonics sharpen corners.
+          </Card>
+        </Cards>
+        <Formula
+          expr="S_t = a\cos(2\pi t/d)+b\sin(2\pi t/d)"
+          plain="d is the period. One pair is a smooth wave. More pairs add edges."
+        />
+        <h2>Leftovers still have a clock</h2>
         <p>
-          where <M expr="d" /> is the period. Extra harmonics capture sharper
-          seasonal corners.
-        </p>
-        <h2>The irregular piece is a time series too</h2>
-        <p>
-          After you fit trend and season, the residuals should be inspected as
-          their own series. If they are white noise, neighboring residuals are
-          uncorrelated and the usual regression formulas are in good shape. If
-          they are correlated, two things happen:
-        </p>
-        <ul>
-          <li>The fit can still track the mean, but uncertainty is misstated.</li>
-          <li>The leftover correlation is unused signal. An ARMA model can take it.</li>
-        </ul>
-        <p>
-          A quick visual: the residual autocorrelation function. For white noise,
-          bars after lag 0 sit inside the rough bands <M expr="\pm 1.96/\sqrt{n}" />.
-          Persistent bars mean the errors remember the past.
+          If residual ACF bars sit inside <M expr="\pm 1.96/\sqrt{n}" />, the
+          usual formulas are in good shape. If they linger, two things are true:
+          your uncertainty is wrong, and you left signal on the table.
         </p>
       </section>
 
-      <Callout title="White noise is a claim about dependence" tone="note">
-        White noise can look jagged and wild. The definition is not “small.” It
-        is “uncorrelated over time, with constant variance.” A calm-looking series
-        can still be highly autocorrelated.
+      <Callout title="White is about memory, not size" tone="note">
+        A wild, jagged series can be white. A calm series can be highly
+        autocorrelated. The claim is “uncorrelated over time,” not “small.”
       </Callout>
 
       <Lab
@@ -149,16 +153,13 @@ export function Univariate() {
         <StemChart values={data.rho} yLabel="Residual ACF" bands={1.96 / Math.sqrt(data.n)} />
       </Lab>
 
-      <section className="prose">
-        <p>
-          Set the AR coefficient near zero and keep a strong season. After
-          removing only a line, the residual ACF shows spikes at the seasonal
-          period and its multiples. Set season to zero and raise the AR
-          coefficient. The residual ACF decays smoothly. Those two leftover
-          shapes ask for different next steps: seasonal terms versus a serial
-          correlation model.
-        </p>
-      </section>
+      <TryThis
+        items={[
+          "AR near zero, strong season: leftover ACF spikes at the period.",
+          "Season at zero, high AR: leftover ACF decays smoothly.",
+          "Spikes want seasonal terms. A smooth decay wants an AR model.",
+        ]}
+      />
 
       <Quiz
         id="univariate"

@@ -1,6 +1,90 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
+import { M } from "./MathTex";
 import { markQuiz } from "../lib/progress";
+
+export function Takeaway({ children }: { children: ReactNode }) {
+  return <p className="takeaway">{children}</p>;
+}
+
+export function Cards({ children }: { children: ReactNode }) {
+  return <div className="term-grid">{children}</div>;
+}
+
+export function Card({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="term-card">
+      <h3>{title}</h3>
+      <div>{children}</div>
+    </div>
+  );
+}
+
+export function Compare({
+  leftTitle,
+  rightTitle,
+  left,
+  right,
+}: {
+  leftTitle: string;
+  rightTitle: string;
+  left: ReactNode;
+  right: ReactNode;
+}) {
+  return (
+    <div className="compare">
+      <div>
+        <h3>{leftTitle}</h3>
+        <div>{left}</div>
+      </div>
+      <div>
+        <h3>{rightTitle}</h3>
+        <div>{right}</div>
+      </div>
+    </div>
+  );
+}
+
+export function Formula({ expr, plain }: { expr: string; plain: string }) {
+  return (
+    <figure className="formula">
+      <M block expr={expr} />
+      <figcaption>{plain}</figcaption>
+    </figure>
+  );
+}
+
+export function TryThis({ items }: { items: string[] }) {
+  return (
+    <div className="try-this">
+      <h3>Try this</h3>
+      <ol>
+        {items.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+export function Steps({ items }: { items: string[] }) {
+  return (
+    <ol className="steps">
+      {items.map((item, i) => (
+        <li key={item}>
+          <span>{i + 1}</span>
+          {item}
+        </li>
+      ))}
+    </ol>
+  );
+}
 
 export function Callout({
   title,
@@ -92,7 +176,7 @@ export function Quiz({
   return (
     <section className="quiz" aria-labelledby={`${id}-quiz`}>
       <h2 id={`${id}-quiz`}>Check yourself</h2>
-      <p className="lede">Answer, then reveal. Explanations sit under each question.</p>
+      <p className="quiz-hint">Pick one for each, then reveal.</p>
       {questions.map((q, i) => (
         <fieldset key={i} className="quiz-q">
           <legend>

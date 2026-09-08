@@ -1,7 +1,19 @@
 import { useMemo, useState } from "react";
 import { LineChart, SpectrumChart } from "../components/Charts";
-import { M } from "../components/MathTex";
-import { Callout, Chapter, Lab, Quiz, Slider, Stat } from "../components/UI";
+import {
+  Callout,
+  Card,
+  Cards,
+  Chapter,
+  Compare,
+  Formula,
+  Lab,
+  Quiz,
+  Slider,
+  Stat,
+  Takeaway,
+  TryThis,
+} from "../components/UI";
 import {
   addTrendSeason,
   convolve,
@@ -64,47 +76,41 @@ export function Filtering() {
     <Chapter
       kicker="Chapter 07"
       title="Linear filtering"
-      lede="A linear filter replaces each value with a weighted sum of nearby values. In the frequency domain that is multiplication: some cycles pass, some are crushed."
+      lede="A filter is a weighted sum of nearby values. Some cycles pass. Some get crushed."
     >
+      <Takeaway>
+        Time domain: convolution. Frequency domain: multiply by a gain curve.
+      </Takeaway>
+
       <section className="prose">
-        <h2>Convolution</h2>
-        <p>
-          A time-invariant linear filter is
-        </p>
-        <M block expr="\tilde Y_t=\sum_j \psi_j Y_{t-j}." />
-        <p>
-          The weights <M expr="\psi_j" /> are the impulse response: feed in a
-          single spike, and the output is the weight sequence. A symmetric moving
-          average is a low-pass filter. It keeps slow motion and damps jitter.
-          First differencing, <M expr="Y_t-Y_{t-1}" />, is a high-pass filter. It
-          kills a linear trend and boosts rapid changes.
-        </p>
-        <h2>Frequency response</h2>
-        <p>
-          Feed the filter a complex exponential at frequency <M expr="\omega" />.
-          The output is the same wave, multiplied by a complex number{" "}
-          <M expr="H(\omega)=\sum_j\psi_j e^{-i\omega j}" />. The modulus{" "}
-          <M expr="|H(\omega)|" /> is the gain. Gain near 0 means that cycle is
-          removed. Gain near 1 (or larger) means it passes, or is amplified.
-        </p>
-        <p>
-          For a first difference, <M expr="|H(\omega)|=2|\sin(\omega/2)|" />: zero
-          at frequency 0, largest at the fastest cycle. For a long moving
-          average, gain is large only near zero and then rings downward. That
-          ringing is why crude smoothers can invent faint wiggles.
-        </p>
-        <p>
-          Exponential smoothing is a causal low-pass filter: it uses only the
-          past, so it lags turning points. The price of not peeking ahead is
-          delay. Two-sided averages have less phase lag and cannot be used at
-          the very end of a live series.
-        </p>
+        <h2>Weights, then gain</h2>
+        <Formula
+          expr="\tilde Y_t=\sum_j \psi_j Y_{t-j}"
+          plain="Feed in a spike and the output is the weight sequence. That is the impulse response."
+        />
+        <Compare
+          leftTitle="Moving average"
+          left="Low-pass. Keeps slow motion. Damps jitter. Can ring and invent faint wiggles."
+          rightTitle="First difference"
+          right="High-pass. Kills a line. Boosts fast changes. Gain is zero at frequency 0."
+        />
+        <Formula
+          expr="|H(\omega)|=\Big|\sum_j\psi_j e^{-i\omega j}\Big|"
+          plain="Gain near 0: that cycle dies. Gain near 1 or more: it passes or gets louder."
+        />
+        <Cards>
+          <Card title="Two-sided average">
+            Less delay. Needs future values. Bad at the live endpoint.
+          </Card>
+          <Card title="Exponential smooth">
+            Uses only the past, so it lags turns. Smaller alpha, heavier memory.
+          </Card>
+        </Cards>
       </section>
 
-      <Callout title="Filter, then model" tone="tip">
-        Differencing is often a preprocessing filter that makes an ARMA model
-        plausible. Smoothing is often a display filter. Do not confuse a pretty
-        smooth with a fitted stochastic model.
+      <Callout title="Pretty is not a model" tone="tip">
+        Differencing prepares an ARMA. Smoothing is often just display. Do not
+        confuse a smooth curve with a fitted stochastic model.
       </Callout>
 
       <Lab
@@ -181,15 +187,13 @@ export function Filtering() {
         />
       </Lab>
 
-      <section className="prose">
-        <p>
-          The moving average flattens the yearly wiggle and the gain falls as
-          frequency rises. Seasonal differencing (lag 12) punches a hole at the
-          seasonal frequency and its cousins. Exponential smoothing tracks the
-          level with a lag: smaller alpha means a heavier memory and a slower
-          chase.
-        </p>
-      </section>
+      <TryThis
+        items={[
+          "Moving average: yearly wiggle flattens, gain falls as frequency rises.",
+          "Lag-12 difference: a hole at the seasonal frequency.",
+          "Exponential smooth: smaller alpha, later chase.",
+        ]}
+      />
 
       <Quiz
         id="filtering"

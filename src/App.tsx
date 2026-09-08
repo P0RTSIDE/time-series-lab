@@ -10,6 +10,8 @@ import { Regression } from "./chapters/Regression";
 import { Relationships } from "./chapters/Relationships";
 import { Spectral } from "./chapters/Spectral";
 import { Transfer } from "./chapters/Transfer";
+import { Unity } from "./chapters/Unity";
+import { Godot } from "./chapters/Godot";
 import { Univariate } from "./chapters/Univariate";
 import { CHAPTERS, EXTRA } from "./content/nav";
 import { loadProgress, markRead, type Progress } from "./lib/progress";
@@ -33,6 +35,7 @@ export function App() {
   useEffect(() => {
     const onHash = () => setRoute(routeFromHash());
     const onProg = () => setProgress(loadProgress());
+    onHash();
     window.addEventListener("hashchange", onHash);
     window.addEventListener("tslab-progress", onProg);
     return () => {
@@ -47,7 +50,9 @@ export function App() {
   }, [route]);
 
   const go = (id: string) => {
-    window.location.hash = `#/${id}`;
+    const next = VALID.has(id) ? id : "home";
+    setRoute(next);
+    window.location.hash = `#/${next}`;
     setOpen(false);
   };
 
@@ -132,6 +137,8 @@ export function App() {
           {route === "filtering" && <Filtering />}
           {route === "prediction" && <Prediction />}
           {route === "transfer" && <Transfer />}
+          {route === "unity" && <Unity />}
+          {route === "godot" && <Godot />}
           {route === "playground" && <Playground />}
           {route === "glossary" && <Glossary />}
         </main>

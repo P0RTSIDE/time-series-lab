@@ -75,6 +75,18 @@ const TERMS: { term: string; def: string; math?: string }[] = [
     term: "Yule-Walker",
     def: "Equations that turn autocovariances into AR coefficients. The sample version is a quick estimator of phi.",
   },
+  {
+    term: "Fixed timestep",
+    def: "A regular physics clock (Unity physics update, Godot physics frames). It is a fixed-rate sample of a dynamical system.",
+  },
+  {
+    term: "Tween / easing",
+    def: "A designed path from one value to another after a start event. In this course it is a short, handmade impulse response.",
+  },
+  {
+    term: "Follow camera",
+    def: "An exponential smoother of a target pose. Tight follow is a large weight on the new sample. Loose follow is a stronger low-pass filter.",
+  },
 ];
 
 export function Glossary() {

@@ -1,7 +1,18 @@
 import { useMemo, useState } from "react";
 import { LineChart, StemChart } from "../components/Charts";
-import { M } from "../components/MathTex";
-import { Callout, Chapter, Lab, Quiz, Slider, Stat } from "../components/UI";
+import {
+  Callout,
+  Card,
+  Cards,
+  Chapter,
+  Formula,
+  Lab,
+  Quiz,
+  Slider,
+  Stat,
+  Takeaway,
+  TryThis,
+} from "../components/UI";
 import {
   ccf,
   formatNum,
@@ -38,51 +49,42 @@ export function Transfer() {
     <Chapter
       kicker="Chapter 09"
       title="Transfer function models"
-      lede="Sometimes one series is an input you can see, and another is the output it drives. A transfer function is the linear map from input to output, plus a noise series of its own."
+      lede="X is an input you can see. Y is the output it drives, plus leftover noise."
     >
+      <Takeaway>
+        The weights are the path Y would take if X were a single spike and the
+        noise were off.
+      </Takeaway>
+
       <section className="prose">
-        <h2>Input, delay, and echo</h2>
-        <p>
-          A discrete transfer function model looks like
-        </p>
-        <M
-          block
-          expr="Y_t=\mu+\sum_{j=0}^{\infty} v_j X_{t-j}+N_t."
+        <h2>Delay, then fade</h2>
+        <Formula
+          expr="Y_t=\mu+\sum_{j=0}^{\infty} v_j X_{t-j}+N_t"
+          plain="v_j is the impulse response. First nonzero weight sits at the delay b."
         />
-        <p>
-          The weights <M expr="v_j" /> are the impulse response: the path{" "}
-          <M expr="Y" /> would take if <M expr="X" /> were a single spike and the
-          noise were off. A delay (dead time) <M expr="b" /> means the first
-          nonzero weight sits at lag <M expr="b" />. A common smooth shape after
-          that is a geometric decay,
-        </p>
-        <M block expr="v_j=0\ (j<b),\qquad v_j=\omega\lambda^{j-b}\ (j\ge b)." />
-        <p>
-          That is the same family as <M expr="Y" /> remembering a filtered{" "}
-          <M expr="X" /> with one AR-like pole. In lag-operator form people write
-          a ratio of short polynomials times <M expr="X_{t-b}" />, plus an ARMA
-          noise <M expr="N_t" />.
-        </p>
-        <h2>How you see the weights</h2>
-        <p>
-          If the input is close to white, the cross-correlation function{" "}
-          <M expr="\rho_{XY}(h)" /> is a scaled copy of <M expr="v_h" />. Real
-          inputs are autocorrelated, which smears that picture. Prewhitening
-          filters both series with a model fitted to <M expr="X" /> first, then
-          reads the CCF of the filtered pair. You do not need the algebra to use
-          the idea: whiten the input, then look at how the output lines up.
-        </p>
-        <p>
-          After you have a candidate <M expr="v_j" />, the leftover{" "}
-          <M expr="N_t=Y_t-\sum v_j X_{t-j}" /> is just another univariate series.
-          Model it with everything in chapters 4 through 8.
-        </p>
+        <Formula
+          expr="v_j=0\ (j<b),\quad v_j=\omega\lambda^{j-b}\ (j\ge b)"
+          plain="Wait b steps, then a geometric echo. Same family as one AR-like pole on a filtered X."
+        />
+        <Cards>
+          <Card title="White input">
+            The CCF is a scaled copy of the weights. Easy to read.
+          </Card>
+          <Card title="Sticky input">
+            The CCF smears. Whiten X first, filter Y the same way, then look.
+          </Card>
+          <Card title="Leftover N">
+            After you subtract the filtered input, treat N like any other series.
+          </Card>
+          <Card title="Plain regression">
+            One weight, no delay. Fine until X has echoes.
+          </Card>
+        </Cards>
       </section>
 
-      <Callout title="Regression is the memoryless case" tone="note">
-        Ordinary regression of Y on contemporaneous X is a transfer function
-        with one weight and white (or, more honestly, correlated) noise. Once
-        X has delayed echoes, you need the extra weights.
+      <Callout title="One weight is the memoryless case" tone="note">
+        Y on contemporaneous X is a transfer function with a single v_0. Delayed
+        echoes need the extra weights.
       </Callout>
 
       <Lab
@@ -163,16 +165,13 @@ export function Transfer() {
         />
       </Lab>
 
-      <section className="prose">
-        <p>
-          A pulse should reappear in Y after the delay, then fade at rate
-          lambda. A step should climb toward a new level of about{" "}
-          <M expr="\omega/(1-\lambda)" /> after the same delay. Turn the noise
-          up and the CCF still hints at the delay, but the later weights get
-          harder to see. That is why people prewhiten and why they keep the
-          polynomial short.
-        </p>
-      </section>
+      <TryThis
+        items={[
+          "Pulse: Y jumps after the delay, then fades at lambda.",
+          "Step: Y climbs toward about omega / (1 - lambda).",
+          "Raise noise. The CCF still hints at the delay. Later weights get messy.",
+        ]}
+      />
 
       <Quiz
         id="transfer"

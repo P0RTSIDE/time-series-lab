@@ -1,7 +1,19 @@
 import { useMemo, useState } from "react";
 import { LineChart, StemChart } from "../components/Charts";
-import { M } from "../components/MathTex";
-import { Callout, Chapter, Lab, Quiz, Slider, Stat } from "../components/UI";
+import {
+  Callout,
+  Card,
+  Cards,
+  Chapter,
+  Formula,
+  Lab,
+  Quiz,
+  Slider,
+  Stat,
+  Steps,
+  Takeaway,
+  TryThis,
+} from "../components/UI";
 import { acf, formatNum, mulberry32, pacf, simulateARMA } from "../lib/ts";
 
 export function ARMA() {
@@ -26,57 +38,48 @@ export function ARMA() {
     <Chapter
       kicker="Chapter 05"
       title="Autoregressive moving average models"
-      lede="MA terms let today’s observation share the last shock. Mixed ARMA models are parsimonious: a short memory in the shocks plus a short memory in the levels."
+      lede="An MA is a short echo of the last shock. Mix it with AR and both plots fade instead of cutting off."
     >
+      <Takeaway>
+        Pure MA: ACF dies after q. Pure AR: PACF dies after p. Mixed: both linger.
+      </Takeaway>
+
       <section className="prose">
-        <h2>Moving averages</h2>
-        <p>
-          An MA(1) is
-        </p>
-        <M block expr="Y_t = e_t + \theta e_{t-1}." />
-        <p>
-          The series is a finite echo of the shock. It is always stationary. The
-          ACF is zero after lag 1, and
-        </p>
-        <M block expr="\rho(1)=\frac{\theta}{1+\theta^2}." />
-        <p>
-          Invertibility, <M expr="|\theta|<1" />, says you can recover shocks from
-          past <M expr="Y" /> values. Without it, two different MA coefficients can
-          imply the same ACF, which makes estimation messy.
-        </p>
-        <h2>ARMA(p, q)</h2>
-        <p>
-          Combine both sides:
-        </p>
-        <M
-          block
-          expr="Y_t=\phi_1 Y_{t-1}+\cdots+\phi_p Y_{t-p}+e_t+\theta_1 e_{t-1}+\cdots+\theta_q e_{t-q}."
+        <h2>A one-echo moving average</h2>
+        <Formula
+          expr="Y_t = e_t + \theta e_{t-1}"
+          plain="Always stationary. ACF is zero after lag 1. Invertible when |theta| is under 1."
         />
-        <p>
-          The AR side gives an infinite ACF tail. The MA side gives an infinite
-          PACF tail. So for a genuine mixed model, both plots tail off. That is
-          the identification headache, and also the reason mixed models can fit
-          well with few parameters.
-        </p>
-        <p>
-          A practical workflow:
-        </p>
-        <ol>
-          <li>Make the series look stationary (detrend, difference, destationize season).</li>
-          <li>Read ACF and PACF for a short list of candidate (p, q).</li>
-          <li>Estimate, then look at residual ACF. Leftover bars mean you are short a term.</li>
-          <li>Prefer the simpler model when residuals look white.</li>
-        </ol>
-        <p>
-          ARIMA is the same idea after differencing. Seasonal ARMA (SARIMA) puts
-          extra factors at lag 12 or 4. The logic does not change: polynomials in
-          the lag operator, plus a white shock.
-        </p>
+        <Formula
+          expr="\rho(1)=\frac{\theta}{1+\theta^2}"
+          plain="The only nonzero lag. Two thetas can share this number. Invertibility picks one."
+        />
+        <h2>Mix them: ARMA</h2>
+        <Formula
+          expr="Y_t=\phi Y_{t-1}+e_t+\theta e_{t-1}"
+          plain="AR gives an ACF tail. MA gives a PACF tail. Few parameters, no sharp cutoff."
+        />
+        <Steps
+          items={[
+            "Make it look stationary: detrend, difference, destationize season.",
+            "Read ACF and PACF. Write down a short list of (p, q).",
+            "Fit, then check residual ACF. Leftover bars mean you are short a term.",
+            "Keep the simpler model once residuals look white.",
+          ]}
+        />
+        <Cards>
+          <Card title="ARIMA">
+            Same idea after differencing.
+          </Card>
+          <Card title="SARIMA">
+            Extra factors at lag 12 or 4. Same logic, seasonal clock.
+          </Card>
+        </Cards>
       </section>
 
       <Callout title="Cancellation" tone="note">
-        An ARMA(1,1) with phi almost equal to minus theta is nearly white noise.
-        Extra parameters that cancel are not a better model. They are a costume.
+        phi almost equal to minus theta is nearly white noise. Extra parameters
+        that cancel are a costume, not a better model.
       </Callout>
 
       <Lab
@@ -140,13 +143,13 @@ export function ARMA() {
         </div>
       </Lab>
 
-      <section className="prose">
-        <p>
-          Pure MA: ACF dies after lag 1, PACF tails. Pure AR: the reverse. Both
-          on: both plots linger. Set phi near minus theta and the series looks
-          closer to noise. That is cancellation, not magic.
-        </p>
-      </section>
+      <TryThis
+        items={[
+          "MA only: ACF dies after 1, PACF tails.",
+          "AR only: the reverse.",
+          "Both on: both plots linger. Set phi near minus theta: it looks like noise.",
+        ]}
+      />
 
       <Quiz
         id="arma"

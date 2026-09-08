@@ -1,7 +1,18 @@
 import { useMemo, useState } from "react";
 import { LineChart } from "../components/Charts";
-import { M } from "../components/MathTex";
-import { Callout, Chapter, Lab, Quiz, Slider, Stat } from "../components/UI";
+import {
+  Callout,
+  Card,
+  Cards,
+  Chapter,
+  Formula,
+  Lab,
+  Quiz,
+  Slider,
+  Stat,
+  Takeaway,
+  TryThis,
+} from "../components/UI";
 import {
   formatNum,
   forecastAR,
@@ -42,57 +53,36 @@ export function Prediction() {
     <Chapter
       kicker="Chapter 08"
       title="Prediction of time series"
-      lede="A forecast is a guess of the future given the past. The best linear guess uses the same dependence you already met. The interval around it should grow as you look farther ahead."
+      lede="The best linear guess uses the same memory you already met. The band should grow as you look farther ahead."
     >
+      <Takeaway>
+        Far enough ahead, you mostly know the mean. An interval that stays
+        skinny is decoration.
+      </Takeaway>
+
       <section className="prose">
-        <h2>The best linear predictor</h2>
-        <p>
-          Write <M expr="\hat Y_{t+h|t}" /> for the forecast of time{" "}
-          <M expr="t+h" /> made at time <M expr="t" />. Among linear functions of
-          the observed past, the minimizer of mean squared error is the
-          projection of <M expr="Y_{t+h}" /> onto that past. For a zero-mean
-          stationary AR(1),
-        </p>
-        <M block expr="\hat Y_{t+h|t}=\phi^h Y_t." />
-        <p>
-          The forecast fades toward the mean. For a general AR(<M expr="p" />),
-          iterate the recursion, replacing unknown future values by forecasts
-          already made (the chain rule of linear prediction).
-        </p>
-        <h2>How uncertainty grows</h2>
-        <p>
-          One-step errors are the shocks <M expr="e_{t+1}" /> if the model is
-          right. Multi-step errors pile those shocks with weights called psi
-          weights (the MA(\infty) coefficients). For AR(1),
-        </p>
-        <M
-          block
-          expr="\mathrm{Var}(Y_{t+h}-\hat Y_{t+h|t})=\sigma_e^2\frac{1-\phi^{2h}}{1-\phi^2}."
+        <h2>Fade toward the center</h2>
+        <Formula
+          expr="\hat Y_{t+h|t}=\phi^h Y_t"
+          plain="Zero-mean AR(1). Each extra step multiplies by phi. For AR(p), recurse and plug forecasts into later lags."
         />
-        <p>
-          As <M expr="h" /> grows, the variance climbs toward the unconditional
-          variance of the series. A 95% interval that ignores that climb is
-          decoration, not a forecast.
-        </p>
-        <p>
-          If <M expr="\phi" /> is near 1, the fade is slow and the interval stays
-          wide for a long time: you have not seen a strong pull back to the
-          center. If <M expr="\phi" /> is near 0, you should confess ignorance
-          after a few steps and just quote the mean.
-        </p>
-        <h2>What this lab does</h2>
-        <p>
-          A hidden AR(1) is generated. You choose an origin, estimate phi from
-          the past only (Yule-Walker), then forecast. The shaded band is a
-          nominal 95% interval from the psi-weight formula. The gold line is the
-          unused future, so you can see calibration with your own eyes.
-        </p>
+        <Formula
+          expr="\mathrm{Var}(Y_{t+h}-\hat Y_{t+h|t})=\sigma_e^2\frac{1-\phi^{2h}}{1-\phi^2}"
+          plain="One-step error is the shock. Multi-step errors pile up. Variance climbs toward the series variance."
+        />
+        <Cards>
+          <Card title="phi near 1">
+            Slow fade. Wide band for a long time. Weak pull home.
+          </Card>
+          <Card title="phi near 0">
+            Confess ignorance after a few steps. Just quote the mean.
+          </Card>
+        </Cards>
       </section>
 
-      <Callout title="Intervals assume the model" tone="warn">
-        These bands do not include uncertainty about phi, about the order, or
-        about a sudden level shift. Real-world coverage is usually thinner than
-        the picture suggests. Treat them as “if this AR is true.”
+      <Callout title="If this AR is true" tone="warn">
+        Bands ignore uncertainty about phi, about the order, and about a sudden
+        shift. Real coverage is usually thinner than the picture.
       </Callout>
 
       <Lab
@@ -149,14 +139,13 @@ export function Prediction() {
         />
       </Lab>
 
-      <section className="prose">
-        <p>
-          Move the origin. The forecast always starts at the last observed level
-          and slides toward zero (this lab uses a zero-mean AR). Raise phi and
-          the slide is slower, the band wider for longer. That is the whole
-          geometry of linear prediction for a stationary autoregression.
-        </p>
-      </section>
+      <TryThis
+        items={[
+          "Move the origin. The forecast starts at the last point and slides toward zero.",
+          "Raise phi. The slide slows and the band stays wide longer.",
+          "Gold is unused future. Count how often it sits inside the band.",
+        ]}
+      />
 
       <Quiz
         id="prediction"

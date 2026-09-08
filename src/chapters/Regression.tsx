@@ -1,7 +1,18 @@
 import { useMemo, useState } from "react";
 import { LineChart, StemChart } from "../components/Charts";
-import { M } from "../components/MathTex";
-import { Callout, Chapter, Lab, Quiz, Slider, Stat } from "../components/UI";
+import {
+  Callout,
+  Card,
+  Cards,
+  Chapter,
+  Formula,
+  Lab,
+  Quiz,
+  Slider,
+  Stat,
+  Takeaway,
+  TryThis,
+} from "../components/UI";
 import {
   acf,
   ar1VarianceInflation,
@@ -39,60 +50,46 @@ export function Regression() {
     <Chapter
       kicker="Chapter 03"
       title="Regression with correlated errors"
-      lede="A linear mean can still be the right story when the residuals remember the past. The coefficient is often fine. The usual standard error is not."
+      lede="The line can still be right. The usual standard error is the part that lies."
     >
+      <Takeaway>
+        OLS often nails the slope. It still quotes a precision you did not earn
+        if the residuals remember each other.
+      </Takeaway>
+
       <section className="prose">
-        <h2>The model</h2>
-        <p>
-          Consider
-        </p>
-        <M block expr="Y_t=\beta_0+\beta_1 X_t+\varepsilon_t,\qquad \varepsilon_t=\phi\varepsilon_{t-1}+a_t." />
-        <p>
-          The mean of <M expr="Y" /> given <M expr="X" /> is still a line. Ordinary
-          least squares (OLS) is typically consistent for <M expr="\beta_1" /> when{" "}
-          <M expr="X" /> is well behaved and <M expr="|\phi|<1" />. What fails is
-          the textbook variance formula, which pretends neighboring residuals
-          carry no shared information.
-        </p>
-        <p>
-          Under AR(1) errors and slowly changing <M expr="X" />, the variance of
-          the slope is inflated by about
-        </p>
-        <M block expr="\frac{1+\phi}{1-\phi}." />
-        <p>
-          At <M expr="\phi=0.8" /> that factor is 9. A naive interval can be three
-          times too narrow. You will “find” significance that is only leftover
-          memory in the errors.
-        </p>
-        <h2>What people do about it</h2>
-        <ul>
-          <li>
-            <strong>Generalized least squares.</strong> Transform the data so the
-            new errors look white (Cochrane-Orcutt and Prais-Winsten are the AR(1)
-            versions), then run OLS on the transformed series.
-          </li>
-          <li>
-            <strong>Corrected standard errors.</strong> Keep the OLS coefficients
-            and replace the variance estimate with a HAC estimator (Newey-West is
-            the common name), which allows residual correlation out to a chosen
-            lag.
-          </li>
-          <li>
-            <strong>Model the errors.</strong> Fit the regression and an ARMA
-            residual model together. That is a close cousin of the transfer
-            function chapter.
-          </li>
-        </ul>
-        <p>
-          All three ideas share one diagnosis: the mean model and the dependence
-          model are different jobs. Mixing them up produces overconfident science.
-        </p>
+        <h2>A line, plus sticky errors</h2>
+        <Formula
+          expr="Y_t=\beta_0+\beta_1 X_t+\varepsilon_t,\quad \varepsilon_t=\phi\varepsilon_{t-1}+a_t"
+          plain="Mean is still a line. Errors are AR(1). The slope can be fine. The textbook SE is not."
+        />
+        <Formula
+          expr="\frac{1+\phi}{1-\phi}"
+          plain="Rough variance inflation when X is sticky. At phi = 0.8 this is 9, so SEs about triple."
+        />
+        <h2>Three repairs, one diagnosis</h2>
+        <Cards>
+          <Card title="GLS">
+            Transform so the new errors look white, then run OLS. Cochrane-Orcutt
+            is the AR(1) version.
+          </Card>
+          <Card title="HAC SEs">
+            Keep the OLS slope. Widen the SE (Newey-West) to allow leftover lags.
+          </Card>
+          <Card title="Model the errors">
+            Fit the line and an ARMA leftover together. Cousin of transfer
+            functions.
+          </Card>
+          <Card title="The shared point">
+            Mean model and dependence model are different jobs. Mix them up and
+            you get overconfident science.
+          </Card>
+        </Cards>
       </section>
 
       <Callout title="Effective sample size" tone="warn">
-        Persistent errors mean neighboring observations are partly repeats of the
-        same surprise. A series of length 200 with high phi can behave like far
-        fewer independent points. That is why intervals must widen.
+        High phi means neighbors are partly the same surprise. Length 200 can
+        behave like far fewer independent points. Intervals must widen.
       </Callout>
 
       <Lab
@@ -155,13 +152,13 @@ export function Regression() {
         <StemChart values={data.rho} yLabel="Residual ACF" bands={1.96 / Math.sqrt(data.n)} />
       </Lab>
 
-      <section className="prose">
-        <p>
-          The residual ACF is the giveaway. If it is loud and you still quote
-          ordinary OLS standard errors, you are reporting a precision you did not
-          earn. GLS or HAC errors are the repair, not a different slope religion.
-        </p>
-      </section>
+      <TryThis
+        items={[
+          "Raise phi and redraw a few times. The slope stays near the truth.",
+          "Watch the naive SE stay tight while the corrected SE grows.",
+          "A loud residual ACF means you have not earned the skinny interval.",
+        ]}
+      />
 
       <Quiz
         id="regression"

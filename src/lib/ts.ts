@@ -484,3 +484,68 @@ export function finitePairs(a: number[], b?: number[]): { i: number; a: number; 
   }
   return out;
 }
+
+export function sampleHold(tSrc: number[], ySrc: number[], tQuery: number[]): number[] {
+  return tQuery.map((t) => {
+    if (tSrc.length === 0) return 0;
+    let i = 0;
+    while (i + 1 < tSrc.length && tSrc[i + 1] <= t) i += 1;
+    return ySrc[i] ?? 0;
+  });
+}
+
+export function lerpSeries(tSrc: number[], ySrc: number[], tQuery: number[]): number[] {
+  return tQuery.map((t) => {
+    if (tSrc.length === 0) return 0;
+    if (t <= tSrc[0]) return ySrc[0];
+    if (t >= tSrc[tSrc.length - 1]) return ySrc[ySrc.length - 1];
+    let i = 0;
+    while (i + 1 < tSrc.length && tSrc[i + 1] < t) i += 1;
+    const t0 = tSrc[i];
+    const t1 = tSrc[i + 1];
+    const a = t1 === t0 ? 0 : (t - t0) / (t1 - t0);
+    return ySrc[i] * (1 - a) + ySrc[i + 1] * a;
+  });
+}
+
+export function rigidBody(
+  times: number[],
+  input: number[],
+  accel: number,
+  friction: number,
+): { pos: number[]; vel: number[] } {
+  const pos = new Array(times.length).fill(0);
+  const vel = new Array(times.length).fill(0);
+  for (let i = 1; i < times.length; i++) {
+    const dt = times[i] - times[i - 1];
+    const u = input[i] ?? 0;
+    const v = vel[i - 1] + (accel * u - friction * vel[i - 1]) * dt;
+    vel[i] = v;
+    pos[i] = pos[i - 1] + v * dt;
+  }
+  return { pos, vel };
+}
+
+export type EaseKind = "linear" | "out" | "inout";
+
+export function ease01(u: number, kind: EaseKind): number {
+  const t = Math.max(0, Math.min(1, u));
+  if (kind === "linear") return t;
+  if (kind === "out") return 1 - (1 - t) * (1 - t);
+  return t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+}
+
+export function tweenSeries(
+  n: number,
+  startAt: number,
+  duration: number,
+  height: number,
+  kind: EaseKind,
+): number[] {
+  return Array.from({ length: n }, (_, t) => {
+    if (t < startAt) return 0;
+    const u = (t - startAt) / Math.max(duration, 1);
+    if (u >= 1) return height;
+    return height * ease01(u, kind);
+  });
+}

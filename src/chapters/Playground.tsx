@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { LineChart, StemChart, SpectrumChart } from "../components/Charts";
-import { Chapter, Lab, Slider, Stat } from "../components/UI";
+import { Chapter, Lab, Slider, Stat, Takeaway, TryThis } from "../components/UI";
 import {
   acf,
   addTrendSeason,
@@ -40,8 +40,12 @@ export function Playground() {
     <Chapter
       kicker="Sandbox"
       title="Playground"
-      lede="Mix an ARMA core with a line and a seasonal wave. Read the time plot, the correlogram, and the periodogram together. This is the diagnostic habit the rest of the course is training."
+      lede="Mix an ARMA core with a line and a season. Read time plot, correlogram, and periodogram together."
     >
+      <Takeaway>
+        Same series, three pictures. If they disagree, you missed a trend or a
+        season.
+      </Takeaway>
       <Lab
         title="Compose a series"
         controls={
@@ -107,6 +111,13 @@ export function Playground() {
         </div>
         <SpectrumChart freq={data.pg.freq} spec={data.sm} />
       </Lab>
+      <TryThis
+        items={[
+          "Add season, no AR. ACF spikes at the period. Periodogram peaks there.",
+          "Zero season, high phi. ACF decays. Spectrum piles at low frequency.",
+          "Add a slope. Low-frequency power jumps. Detrend in your head first.",
+        ]}
+      />
     </Chapter>
   );
 }

@@ -1,7 +1,19 @@
 import { useMemo, useState } from "react";
 import { LineChart, StemChart } from "../components/Charts";
-import { M } from "../components/MathTex";
-import { Callout, Chapter, Lab, Quiz, Slider, Stat } from "../components/UI";
+import {
+  Callout,
+  Card,
+  Cards,
+  Chapter,
+  Compare,
+  Formula,
+  Lab,
+  Quiz,
+  Slider,
+  Stat,
+  Takeaway,
+  TryThis,
+} from "../components/UI";
 import { acf, formatNum, mulberry32, pacf, simulateAR, yuleWalker } from "../lib/ts";
 
 export function AR() {
@@ -35,59 +47,43 @@ export function AR() {
     <Chapter
       kicker="Chapter 04"
       title="Autoregressive models"
-      lede="An autoregression says the present is a linear function of recent past values, plus a fresh shock. The ACF tails off. The PACF cuts off."
+      lede="Today is a mix of recent past plus a new shock. The ACF fades. The PACF stops."
     >
+      <Takeaway>
+        PACF cutoff tells you the order. ACF length tells you how sticky the
+        memory is.
+      </Takeaway>
+
       <section className="prose">
-        <h2>AR(1), the workhorse</h2>
-        <p>
-          The order-1 model is
-        </p>
-        <M block expr="Y_t = \phi Y_{t-1} + e_t," />
-        <p>
-          with <M expr="e_t" /> white noise. Stationarity needs <M expr="|\phi|<1" />.
-          Then the mean is zero (or a constant if you add an intercept), the
-          variance is <M expr="\sigma_e^2/(1-\phi^2)" />, and the ACF is a geometric
-          decay:
-        </p>
-        <M block expr="\rho(h)=\phi^{|h|}." />
-        <p>
-          Positive <M expr="\phi" /> gives long runs above and below the mean.
-          Negative <M expr="\phi" /> makes the series flip-flop. As{" "}
-          <M expr="\phi" /> approaches 1, the series starts to look like a random
-          walk: wander, no pull home.
-        </p>
-        <h2>AR(p) and the characteristic polynomial</h2>
-        <p>
-          Higher order means more lags:
-        </p>
-        <M block expr="Y_t=\phi_1 Y_{t-1}+\cdots+\phi_p Y_{t-p}+e_t." />
-        <p>
-          Stationarity is about the roots of{" "}
-          <M expr="1-\phi_1 z-\cdots-\phi_p z^p=0" /> lying outside the unit
-          circle. For AR(2) a practical checklist is{" "}
-          <M expr="|\phi_2|<1" />, <M expr="\phi_1+\phi_2<1" />, and{" "}
-          <M expr="\phi_2-\phi_1<1" />.
-        </p>
-        <h2>Identification with ACF and PACF</h2>
-        <p>
-          The partial autocorrelation at lag <M expr="k" /> is the extra
-          correlation at that lag after you have already accounted for lags 1
-          through <M expr="k-1" />. For a true AR(<M expr="p" />):
-        </p>
-        <ul>
-          <li>The ACF tails off (exponentially, or in a damped oscillation).</li>
-          <li>The PACF is near zero after lag <M expr="p" />.</li>
-        </ul>
-        <p>
-          That cutoff is why people glance at a PACF to guess <M expr="p" />.
-          Yule-Walker equations turn the sample ACF into coefficient estimates.
-          Least squares on lagged values is a close alternative.
-        </p>
+        <h2>AR(1) in one screen</h2>
+        <Formula
+          expr="Y_t = \phi Y_{t-1} + e_t"
+          plain="Need |phi| under 1 or it will not stay put. ACF is phi to the power |h|."
+        />
+        <Compare
+          leftTitle="phi positive"
+          left="Long runs above and below the mean."
+          rightTitle="phi negative"
+          right="The series flip-flops. Near 1, it starts to wander like a random walk."
+        />
+        <h2>More lags, same idea</h2>
+        <Formula
+          expr="Y_t=\phi_1 Y_{t-1}+\cdots+\phi_p Y_{t-p}+e_t"
+          plain="AR(2) checklist: |phi2| < 1, phi1+phi2 < 1, and phi2-phi1 < 1."
+        />
+        <Cards>
+          <Card title="ACF">
+            Tails off. Exponential, or a damped wiggle.
+          </Card>
+          <Card title="PACF">
+            Extra correlation after earlier lags are removed. Near zero after p.
+          </Card>
+        </Cards>
       </section>
 
-      <Callout title="Unit root warning" tone="warn">
-        If the fitted phi sits on the edge of 1, think about differencing or a
-        random-walk-with-drift story before you trust AR forecasts in levels.
+      <Callout title="If phi sits on 1" tone="warn">
+        Differencing or a random-walk-with-drift story first. Do not trust level
+        forecasts from an AR that is barely holding on.
       </Callout>
 
       <Lab
@@ -149,14 +145,12 @@ export function AR() {
         </div>
       </Lab>
 
-      <section className="prose">
-        <p>
-          Keep p = 1 and slide phi1 from 0.2 to 0.9. The ACF stretches farther.
-          The PACF stays dominated by lag 1. Switch to p = 2 with phi2 negative
-          enough to create a hump. The ACF can oscillate. The PACF should still
-          quiet down after lag 2.
-        </p>
-      </section>
+      <TryThis
+        items={[
+          "p = 1, slide phi1 from 0.2 to 0.9. ACF stretches. PACF stays a lag-1 spike.",
+          "p = 2 with a negative phi2. ACF can wiggle. PACF should go quiet after 2.",
+        ]}
+      />
 
       <Quiz
         id="ar"

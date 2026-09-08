@@ -1,7 +1,19 @@
 import { useMemo, useState } from "react";
 import { LineChart, StemChart } from "../components/Charts";
-import { M } from "../components/MathTex";
-import { Callout, Chapter, Lab, Quiz, Slider, Stat } from "../components/UI";
+import {
+  Callout,
+  Card,
+  Cards,
+  Chapter,
+  Compare,
+  Formula,
+  Lab,
+  Quiz,
+  Slider,
+  Stat,
+  Takeaway,
+  TryThis,
+} from "../components/UI";
 import {
   acf,
   addTrendSeason,
@@ -36,57 +48,43 @@ export function Relationships() {
     <Chapter
       kicker="Chapter 01"
       title="Time series relationships"
-      lede="A time series is a sequence recorded in order. The interesting part is not the average level. It is how today is tied to yesterday, and how one series is tied to another."
+      lede="The clock is part of the data. Today is tied to yesterday, and one series can lead another."
     >
+      <Takeaway>
+        Shuffle a spreadsheet of people and the story holds. Shuffle rainfall by
+        month and the story dies.
+      </Takeaway>
+
       <section className="prose">
-        <h2>Order is information</h2>
-        <p>
-          In a cross section, shuffling the rows should not change the story. In a
-          time series, shuffling destroys the story. Rainfall in April belongs next
-          to rainfall in May. A stock price at 10:01 belongs next to 10:02. The
-          clock (or the calendar) is part of the data.
-        </p>
-        <p>
-          Two basic relationships show up everywhere:
-        </p>
-        <ul>
-          <li>
-            <strong>Autocorrelation.</strong> The series is related to its own
-            lagged values. If yesterday was high, today tends to be high.
-          </li>
-          <li>
-            <strong>Cross-correlation.</strong> One series leads or lags another.
-            Heating demand today may follow temperature two days ago.
-          </li>
-        </ul>
-        <p>
-          Write a pair of series as <M expr="\{X_t\}" /> and <M expr="\{Y_t\}" />.
-          The lag-<M expr="h" /> autocorrelation of <M expr="X" /> is
-        </p>
-        <M block expr="\rho_X(h)=\mathrm{Corr}(X_t, X_{t+h})." />
-        <p>
-          The cross-correlation is
-        </p>
-        <M block expr="\rho_{XY}(h)=\mathrm{Corr}(X_t, Y_{t+h})." />
-        <p>
-          A peak at a positive <M expr="h" /> in <M expr="\rho_{XY}(h)" /> means{" "}
-          <M expr="Y" /> moves with a delayed copy of <M expr="X" />. A peak at a
-          negative lag means the reverse ordering.
-        </p>
-        <h2>Shared trends look like relationships</h2>
-        <p>
-          If two series both wander upward, a scatterplot of <M expr="Y_t" /> against{" "}
-          <M expr="X_t" /> can look tight even when neither series causes the
-          other. That is a spurious relationship: the clock is driving both. You
-          will meet a cleaner version of this warning in the regression chapter.
-          For now, remember to ask whether the link survives after you remove
-          trend, or after you look at changes rather than levels.
-        </p>
+        <h2>Two kinds of relationship</h2>
+        <Cards>
+          <Card title="Autocorrelation">
+            The series vs its own past. High yesterday, high today.
+          </Card>
+          <Card title="Cross-correlation">
+            One series vs another, with a delay. Heat follows cold snaps.
+          </Card>
+        </Cards>
+        <Formula
+          expr="\rho_X(h)=\mathrm{Corr}(X_t, X_{t+h})"
+          plain="How much X lines up with itself h steps later."
+        />
+        <Formula
+          expr="\rho_{XY}(h)=\mathrm{Corr}(X_t, Y_{t+h})"
+          plain="Positive h: Y follows X. Negative h: X follows Y."
+        />
+        <h2>A shared climb is not a link</h2>
+        <Compare
+          leftTitle="Looks related"
+          left="Two series both drift up. A scatter of Y vs X looks tight."
+          rightTitle="Often fake"
+          right="The clock drove both. Remove the trend, or look at changes, before you believe it."
+        />
       </section>
 
-      <Callout title="A useful habit" tone="tip">
-        Always plot the series against time first, then plot lags. A pretty
-        correlation number without a time plot is easy to misread.
+      <Callout title="Habit" tone="tip">
+        Plot against time first. A correlation number with no time plot is easy
+        to misread.
       </Callout>
 
       <Lab
@@ -162,15 +160,13 @@ export function Relationships() {
         />
       </Lab>
 
-      <section className="prose">
-        <p>
-          Turn the shared trend up and the lag link down. Both series climb
-          together, but the cross-correlation plot becomes smeared instead of
-          peaked. Turn the trend down and the lag link up. A spike appears near
-          the delay you chose. That spike is a relationship through time, not
-          just a shared climb.
-        </p>
-      </section>
+      <TryThis
+        items={[
+          "Turn trend up and the lag link down. Both climb, but the CCF smears.",
+          "Turn trend down and the lag link up. A spike appears near your delay.",
+          "That spike is a link through time, not just a shared climb.",
+        ]}
+      />
 
       <Quiz
         id="relationships"
