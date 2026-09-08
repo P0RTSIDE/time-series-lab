@@ -2,8 +2,6 @@ import { useMemo, useState } from "react";
 import { LineChart } from "../components/Charts";
 import {
   Callout,
-  Card,
-  Cards,
   Chapter,
   Compare,
   Lab,
@@ -12,6 +10,7 @@ import {
   Slider,
   Stat,
   Takeaway,
+  TermList,
   TryThis,
 } from "../components/UI";
 
@@ -64,21 +63,26 @@ export function Godot() {
           Timer is a node. You nest them. A player might be a CharacterBody2D
           with a Sprite2D and a CollisionShape2D as children.
         </p>
-        <Cards>
-          <Card title="Scene tree">
-            The live list of nodes. Parent transforms move the children.
-          </Card>
-          <Card title="Inspector">
-            The selected node’s exported numbers. Same job as Unity’s Inspector.
-          </Card>
-          <Card title="FileSystem">
-            Your art, scenes, and scripts. A scene file is a reusable packed
-            tree, like a prefab.
-          </Card>
-          <Card title="2D / 3D / Script">
-            Edit the world, or the script on the selected node.
-          </Card>
-        </Cards>
+        <TermList
+          items={[
+            {
+              term: "Scene tree",
+              text: "The live list of nodes. Parent transforms move the children.",
+            },
+            {
+              term: "Inspector",
+              text: "The selected node’s exported numbers. Same job as Unity’s Inspector.",
+            },
+            {
+              term: "FileSystem",
+              text: "Your art, scenes, and scripts. A scene file is a reusable packed tree, like a prefab.",
+            },
+            {
+              term: "2D / 3D / Script",
+              text: "Edit the world, or the script on the selected node.",
+            },
+          ]}
+        />
 
         <h2>GDScript you need in week one</h2>
         <p>
@@ -107,20 +111,26 @@ export function Godot() {
           ]}
           does="Each physics tick, read the move axis, apply gravity, jump if you just pressed the action and you are on the floor, then let Godot resolve the slide against walls."
         />
-        <Cards>
-          <Card title="_ready()">
-            Once, after the node and its children exist. Connect signals here.
-          </Card>
-          <Card title="_process(delta)">
-            Every idle frame. Visuals, UI, non-physics motion.
-          </Card>
-          <Card title="_physics_process(delta)">
-            Fixed physics tick. CharacterBody2D and move_and_slide live here.
-          </Card>
-          <Card title="@export">
-            Shows the variable in the Inspector, like a public field in Unity.
-          </Card>
-        </Cards>
+        <TermList
+          items={[
+            {
+              term: "_ready()",
+              text: "Once, after the node and its children exist. Connect signals here.",
+            },
+            {
+              term: "_process(delta)",
+              text: "Every idle frame. Visuals, UI, non-physics motion.",
+            },
+            {
+              term: "_physics_process(delta)",
+              text: "Fixed physics tick. CharacterBody2D and move_and_slide live here.",
+            },
+            {
+              term: "@export",
+              text: "Shows the variable in the Inspector, like a public field in Unity.",
+            },
+          ]}
+        />
         <Compare
           leftTitle="Signals"
           left="A button emits pressed. You connect that to a function. No need to ask ‘are they clicking?’ every frame."

@@ -2,8 +2,6 @@ import { useMemo, useState } from "react";
 import { LineChart, SpectrumChart } from "../components/Charts";
 import {
   Callout,
-  Card,
-  Cards,
   Chapter,
   Formula,
   Lab,
@@ -11,6 +9,7 @@ import {
   Slider,
   Stat,
   Takeaway,
+  TermList,
   TryThis,
 } from "../components/UI";
 import {
@@ -69,20 +68,26 @@ export function Spectral() {
 
       <section className="prose">
         <h2>The words</h2>
-        <Cards>
-          <Card title="Period">
-            How many steps between repeats. Monthly year: 12.
-          </Card>
-          <Card title="Frequency">
-            Reciprocal. Two cycles a year in monthly data: 1/6.
-          </Card>
-          <Card title="Amplitude">
-            Height of the wave. Squares into power.
-          </Card>
-          <Card title="Leakage">
-            Off-grid periods spill into neighbors. Short records lie more.
-          </Card>
-        </Cards>
+        <TermList
+          items={[
+            {
+              term: "Period",
+              text: "How many steps between repeats. Monthly year: 12.",
+            },
+            {
+              term: "Frequency",
+              text: "Reciprocal. Two cycles a year in monthly data: 1/6.",
+            },
+            {
+              term: "Amplitude",
+              text: "Height of the wave. Squares into power.",
+            },
+            {
+              term: "Leakage",
+              text: "Off-grid periods spill into neighbors. Short records lie more.",
+            },
+          ]}
+        />
         <h2>The periodogram</h2>
         <Formula
           expr="I(\omega_k)=\frac{1}{n}\left|\sum_{t=1}^{n}(Y_t-\bar Y)e^{-i\omega_k t}\right|^2"

@@ -2,8 +2,6 @@ import { useMemo, useState } from "react";
 import { LineChart, StemChart } from "../components/Charts";
 import {
   Callout,
-  Card,
-  Cards,
   Chapter,
   Formula,
   Lab,
@@ -11,6 +9,7 @@ import {
   Slider,
   Stat,
   Takeaway,
+  TermList,
   TryThis,
 } from "../components/UI";
 import {
@@ -68,23 +67,26 @@ export function Regression() {
           plain="Rough variance inflation when X is sticky. At phi = 0.8 this is 9, so SEs about triple."
         />
         <h2>Three repairs, one diagnosis</h2>
-        <Cards>
-          <Card title="GLS">
-            Transform so the new errors look white, then run OLS. Cochrane-Orcutt
-            is the AR(1) version.
-          </Card>
-          <Card title="HAC SEs">
-            Keep the OLS slope. Widen the SE (Newey-West) to allow leftover lags.
-          </Card>
-          <Card title="Model the errors">
-            Fit the line and an ARMA leftover together. Cousin of transfer
-            functions.
-          </Card>
-          <Card title="The shared point">
-            Mean model and dependence model are different jobs. Mix them up and
-            you get overconfident science.
-          </Card>
-        </Cards>
+        <TermList
+          items={[
+            {
+              term: "GLS",
+              text: "Transform so the new errors look white, then run OLS. Cochrane-Orcutt is the AR(1) version.",
+            },
+            {
+              term: "HAC SEs",
+              text: "Keep the OLS slope. Widen the SE (Newey-West) to allow leftover lags.",
+            },
+            {
+              term: "Model the errors",
+              text: "Fit the line and an ARMA leftover together. Cousin of transfer functions.",
+            },
+            {
+              term: "The shared point",
+              text: "Mean model and dependence model are different jobs. Mix them up and you get overconfident science.",
+            },
+          ]}
+        />
       </section>
 
       <Callout title="Effective sample size" tone="warn">

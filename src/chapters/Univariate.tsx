@@ -3,8 +3,6 @@ import { LineChart, StemChart } from "../components/Charts";
 import { M } from "../components/MathTex";
 import {
   Callout,
-  Card,
-  Cards,
   Chapter,
   Formula,
   Lab,
@@ -12,6 +10,7 @@ import {
   Slider,
   Stat,
   Takeaway,
+  TermList,
   TryThis,
 } from "../components/UI";
 import {
@@ -58,20 +57,26 @@ export function Univariate() {
           expr="Y_t = T_t + S_t + \varepsilon_t"
           plain="Trend plus season plus irregular. Start here before you reach for ARMA."
         />
-        <Cards>
-          <Card title="Trend">
-            Slow level. Often a line, sometimes a gentle curve.
-          </Card>
-          <Card title="Season">
-            A known repeat: 12 for months, 7 for weekdays.
-          </Card>
-          <Card title="Irregular">
-            What is left. Rarely white. Inspect its ACF.
-          </Card>
-          <Card title="A cheap season">
-            A sine and cosine at period d. Extra harmonics sharpen corners.
-          </Card>
-        </Cards>
+        <TermList
+          items={[
+            {
+              term: "Trend",
+              text: "Slow level. Often a line, sometimes a gentle curve.",
+            },
+            {
+              term: "Season",
+              text: "A known repeat: 12 for months, 7 for weekdays.",
+            },
+            {
+              term: "Irregular",
+              text: "What is left. Rarely white. Inspect its ACF.",
+            },
+            {
+              term: "A cheap season",
+              text: "A sine and cosine at period d. Extra harmonics sharpen corners.",
+            },
+          ]}
+        />
         <Formula
           expr="S_t = a\cos(2\pi t/d)+b\sin(2\pi t/d)"
           plain="d is the period. One pair is a smooth wave. More pairs add edges."

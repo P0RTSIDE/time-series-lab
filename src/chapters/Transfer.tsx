@@ -2,8 +2,6 @@ import { useMemo, useState } from "react";
 import { LineChart, StemChart } from "../components/Charts";
 import {
   Callout,
-  Card,
-  Cards,
   Chapter,
   Formula,
   Lab,
@@ -11,6 +9,7 @@ import {
   Slider,
   Stat,
   Takeaway,
+  TermList,
   TryThis,
 } from "../components/UI";
 import {
@@ -66,20 +65,26 @@ export function Transfer() {
           expr="v_j=0\ (j<b),\quad v_j=\omega\lambda^{j-b}\ (j\ge b)"
           plain="Wait b steps, then a geometric echo. Same family as one AR-like pole on a filtered X."
         />
-        <Cards>
-          <Card title="White input">
-            The CCF is a scaled copy of the weights. Easy to read.
-          </Card>
-          <Card title="Sticky input">
-            The CCF smears. Whiten X first, filter Y the same way, then look.
-          </Card>
-          <Card title="Leftover N">
-            After you subtract the filtered input, treat N like any other series.
-          </Card>
-          <Card title="Plain regression">
-            One weight, no delay. Fine until X has echoes.
-          </Card>
-        </Cards>
+        <TermList
+          items={[
+            {
+              term: "White input",
+              text: "The CCF is a scaled copy of the weights. Easy to read.",
+            },
+            {
+              term: "Sticky input",
+              text: "The CCF smears. Whiten X first, filter Y the same way, then look.",
+            },
+            {
+              term: "Leftover N",
+              text: "After you subtract the filtered input, treat N like any other series.",
+            },
+            {
+              term: "Plain regression",
+              text: "One weight, no delay. Fine until X has echoes.",
+            },
+          ]}
+        />
       </section>
 
       <Callout title="One weight is the memoryless case" tone="note">

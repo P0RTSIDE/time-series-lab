@@ -3,8 +3,6 @@ import { LineChart, StemChart } from "../components/Charts";
 import { M } from "../components/MathTex";
 import {
   Callout,
-  Card,
-  Cards,
   Chapter,
   Compare,
   Formula,
@@ -13,6 +11,7 @@ import {
   Slider,
   Stat,
   Takeaway,
+  TermList,
   TryThis,
 } from "../components/UI";
 import {
@@ -89,24 +88,26 @@ export function Relationships() {
           expr="\rho_{XY}(h)=\mathrm{Corr}(X_t, Y_{t+h})"
           plain="h is how far Y sits after X. The sign of h is the direction of the delay, not ‘good’ or ‘bad’."
         />
-        <Cards>
-          <Card title="Lag 0">
-            Same clock. Do X and Y move together right now?
-          </Card>
-          <Card title="Positive lag">
-            Corr(X now, Y later). A peak at +3 means Y follows X by about 3
-            steps. Heating after a cold snap is this shape.
-          </Card>
-          <Card title="Negative lag">
-            Corr(X now, Y earlier), which is the same as X following Y. The
-            lead is on the other series.
-          </Card>
-          <Card title="The bands">
-            Same chance fence as the ACF. A lonely bar just over the line can
-            be noise. A tall, isolated peak at one lag is the usual “delay”
-            signature.
-          </Card>
-        </Cards>
+        <TermList
+          items={[
+            {
+              term: "Lag 0",
+              text: "Same clock. Do X and Y move together right now?",
+            },
+            {
+              term: "Positive lag",
+              text: "Corr(X now, Y later). A peak at +3 means Y follows X by about 3 steps. Heating after a cold snap is this shape.",
+            },
+            {
+              term: "Negative lag",
+              text: "Corr(X now, Y earlier), which is the same as X following Y. The lead is on the other series.",
+            },
+            {
+              term: "The bands",
+              text: "Same chance fence as the ACF. A lonely bar just over the line can be noise. A tall, isolated peak at one lag is the usual delay signature.",
+            },
+          ]}
+        />
         <p>
           A worked picture: suppose Y is a noisy copy of X from three steps
           ago. The CCF should peak near +3, and other lags should sit closer

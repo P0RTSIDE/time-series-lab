@@ -26,6 +26,23 @@ export function Card({
   );
 }
 
+export function TermList({
+  items,
+}: {
+  items: { term: string; text: ReactNode }[];
+}) {
+  return (
+    <dl className="term-list">
+      {items.map((item) => (
+        <div key={item.term} className="term-row">
+          <dt>{item.term}</dt>
+          <dd>{item.text}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 export function Compare({
   leftTitle,
   rightTitle,

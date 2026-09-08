@@ -2,8 +2,6 @@ import { useMemo, useState } from "react";
 import { LineChart } from "../components/Charts";
 import {
   Callout,
-  Card,
-  Cards,
   Chapter,
   Compare,
   Lab,
@@ -12,6 +10,7 @@ import {
   Slider,
   Stat,
   Takeaway,
+  TermList,
   TryThis,
 } from "../components/UI";
 
@@ -51,22 +50,26 @@ export function Unity() {
 
       <section className="prose">
         <h2>The editor in three panes</h2>
-        <Cards>
-          <Card title="Hierarchy">
-            The list of objects in the open scene: camera, light, player, floor.
-          </Card>
-          <Card title="Scene / Game">
-            Scene is the edit view. Game is what the player would see.
-          </Card>
-          <Card title="Inspector">
-            The selected object’s components and their numbers. Change speed here
-            without opening the script.
-          </Card>
-          <Card title="Project">
-            Your assets: art, scenes, and scripts. Drag one onto an object to
-            attach it.
-          </Card>
-        </Cards>
+        <TermList
+          items={[
+            {
+              term: "Hierarchy",
+              text: "The list of objects in the open scene: camera, light, player, floor.",
+            },
+            {
+              term: "Scene / Game",
+              text: "Scene is the edit view. Game is what the player would see.",
+            },
+            {
+              term: "Inspector",
+              text: "The selected object’s components and their numbers. Change speed here without opening the script.",
+            },
+            {
+              term: "Project",
+              text: "Your assets: art, scenes, and scripts. Drag one onto an object to attach it.",
+            },
+          ]}
+        />
         <p>
           A GameObject is an empty named slot. It always has a Transform
           (position, rotation, scale). Everything else is optional: a mesh so
@@ -99,22 +102,26 @@ export function Unity() {
           ]}
           does="Each picture, read the left-right stick or keys, and slide the object. Multiply by the frame duration so speed stays in units per second, not units per frame."
         />
-        <Cards>
-          <Card title="void Start()">
-            Runs once when the object wakes. Good for grabbing references.
-          </Card>
-          <Card title="void Update()">
-            Runs every displayed frame. Input, animation, UI, most gameplay feel.
-          </Card>
-          <Card title="void FixedUpdate()">
-            Runs on the physics clock. Forces, Rigidbody velocity, anything
-            collisions must agree on.
-          </Card>
-          <Card title="Time.deltaTime">
-            Seconds since the last Update. Use it when you move in Update so a
-            slow machine does not crawl.
-          </Card>
-        </Cards>
+        <TermList
+          items={[
+            {
+              term: "void Start()",
+              text: "Runs once when the object wakes. Good for grabbing references.",
+            },
+            {
+              term: "void Update()",
+              text: "Runs every displayed frame. Input, animation, UI, most gameplay feel.",
+            },
+            {
+              term: "void FixedUpdate()",
+              text: "Runs on the physics clock. Forces, Rigidbody velocity, anything collisions must agree on.",
+            },
+            {
+              term: "Time.deltaTime",
+              text: "Seconds since the last Update. Use it when you move in Update so a slow machine does not crawl.",
+            },
+          ]}
+        />
         <Compare
           leftTitle="Move the Transform"
           left="Fine for a menu cursor or a kinematic prop. You are the one writing the new position."
