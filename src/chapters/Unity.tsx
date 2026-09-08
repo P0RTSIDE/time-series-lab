@@ -39,9 +39,9 @@ export function Unity() {
 
   return (
     <Chapter
-      kicker="Game engines · U1"
-      title="Unity basics"
-      lede="A crash course for a game class: the editor, C#, and how a scene actually runs. No time series here."
+      kicker="Unity · U1"
+      title="Editor and objects"
+      lede="First Unity lesson: the editor panes, GameObjects, and components. Nine lessons in this track. No time series here."
     >
       <Takeaway>
         Everything you see is a GameObject wearing components. A script is just

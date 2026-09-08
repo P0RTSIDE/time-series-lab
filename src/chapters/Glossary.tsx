@@ -95,6 +95,18 @@ const TERMS: { term: string; def: string; math?: string }[] = [
     term: "Signal",
     def: "A Godot event a node can emit (pressed, timeout). Other nodes connect a function instead of polling every frame.",
   },
+  {
+    term: "Prefab",
+    def: "A Unity object recipe you can instantiate many times. Close to a packed Godot scene.",
+  },
+  {
+    term: "Autoload",
+    def: "A Godot singleton that stays alive across scenes. Typical home for score and game flow.",
+  },
+  {
+    term: "DontDestroyOnLoad",
+    def: "A Unity call that keeps an object when a new scene loads. Cousin of an Autoload.",
+  },
 ];
 
 export function Glossary() {

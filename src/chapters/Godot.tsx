@@ -45,9 +45,9 @@ export function Godot() {
 
   return (
     <Chapter
-      kicker="Game engines · G1"
-      title="Godot basics"
-      lede="A crash course for a game class: nodes, scenes, GDScript, and signals. Separate from the time series track."
+      kicker="Godot · G1"
+      title="Nodes and scenes"
+      lede="First Godot lesson: the scene tree and typed nodes. Nine lessons in this track. Separate from time series."
     >
       <Takeaway>
         A Godot scene is a tree of nodes. A script sits on one node and talks

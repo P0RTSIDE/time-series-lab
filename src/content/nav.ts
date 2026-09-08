@@ -62,20 +62,121 @@ export const CHAPTERS: ChapterMeta[] = [
   },
 ];
 
-export const GAME: ChapterMeta[] = [
+export const UNITY: ChapterMeta[] = [
   {
     id: "unity",
     num: "U1",
-    title: "Unity basics",
-    blurb: "Editor, objects, components, C#, and the two update loops.",
+    title: "Editor and objects",
+    blurb: "Hierarchy, Inspector, GameObjects, and components.",
   },
+  {
+    id: "unity-csharp",
+    num: "U2",
+    title: "C# you will write",
+    blurb: "Classes, fields, methods, and MonoBehaviour.",
+  },
+  {
+    id: "unity-time",
+    num: "U3",
+    title: "Time and the two loops",
+    blurb: "Update, FixedUpdate, and Time.deltaTime.",
+  },
+  {
+    id: "unity-input",
+    num: "U4",
+    title: "Reading input",
+    blurb: "Axes, buttons, and the Input Manager.",
+  },
+  {
+    id: "unity-physics",
+    num: "U5",
+    title: "Bodies and collisions",
+    blurb: "Rigidbody, colliders, layers, and bounce.",
+  },
+  {
+    id: "unity-prefabs",
+    num: "U6",
+    title: "Prefabs and spawning",
+    blurb: "Instantiate, destroy, and reusable recipes.",
+  },
+  {
+    id: "unity-ui",
+    num: "U7",
+    title: "Canvas and UI",
+    blurb: "Buttons, text, and hooking UI to a script.",
+  },
+  {
+    id: "unity-scenes",
+    num: "U8",
+    title: "Scenes and game state",
+    blurb: "Load a scene, keep a score, survive a reload.",
+  },
+  {
+    id: "unity-finish",
+    num: "U9",
+    title: "Motion, sound, and polish",
+    blurb: "Coroutines, animation, and a first audio cue.",
+  },
+];
+
+export const GODOT: ChapterMeta[] = [
   {
     id: "godot",
     num: "G1",
-    title: "Godot basics",
-    blurb: "Nodes, scenes, GDScript, signals, and physics bodies.",
+    title: "Nodes and scenes",
+    blurb: "The scene tree, typed nodes, and packed scenes.",
+  },
+  {
+    id: "godot-gdscript",
+    num: "G2",
+    title: "GDScript you will write",
+    blurb: "extends, types, @export, and the dollar path.",
+  },
+  {
+    id: "godot-time",
+    num: "G3",
+    title: "Process clocks",
+    blurb: "_ready, _process, and _physics_process.",
+  },
+  {
+    id: "godot-input",
+    num: "G4",
+    title: "Reading input",
+    blurb: "The Input Map, actions, and just-pressed.",
+  },
+  {
+    id: "godot-bodies",
+    num: "G5",
+    title: "Bodies and collisions",
+    blurb: "CharacterBody2D, move_and_slide, and layers.",
+  },
+  {
+    id: "godot-instances",
+    num: "G6",
+    title: "Instancing scenes",
+    blurb: "Packed scenes, spawn, and free.",
+  },
+  {
+    id: "godot-signals",
+    num: "G7",
+    title: "Signals and UI",
+    blurb: "pressed, timeout, and connecting in _ready.",
+  },
+  {
+    id: "godot-autoload",
+    num: "G8",
+    title: "Autoload and groups",
+    blurb: "A game singleton, tags, and changing scenes.",
+  },
+  {
+    id: "godot-finish",
+    num: "G9",
+    title: "Motion, sound, and polish",
+    blurb: "Tween, AnimationPlayer, and a first sound.",
   },
 ];
+
+export const GAME = [...UNITY, ...GODOT];
 
 export const EXTRA = [
   { id: "playground", title: "Playground" },

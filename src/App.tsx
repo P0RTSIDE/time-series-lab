@@ -1,9 +1,17 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ComponentType } from "react";
 import { AR } from "./chapters/AR";
 import { ARMA } from "./chapters/ARMA";
 import { Filtering } from "./chapters/Filtering";
 import { Glossary } from "./chapters/Glossary";
 import { Godot } from "./chapters/Godot";
+import { GodotAutoload } from "./chapters/godot/GodotAutoload";
+import { GodotBodies } from "./chapters/godot/GodotBodies";
+import { GodotFinish } from "./chapters/godot/GodotFinish";
+import { GodotInput } from "./chapters/godot/GodotInput";
+import { GodotInstances } from "./chapters/godot/GodotInstances";
+import { GodotScript } from "./chapters/godot/GodotScript";
+import { GodotSignals } from "./chapters/godot/GodotSignals";
+import { GodotTime } from "./chapters/godot/GodotTime";
 import { Home } from "./chapters/Home";
 import { Playground } from "./chapters/Playground";
 import { Prediction } from "./chapters/Prediction";
@@ -13,16 +21,52 @@ import { Spectral } from "./chapters/Spectral";
 import { Transfer } from "./chapters/Transfer";
 import { Unity } from "./chapters/Unity";
 import { Univariate } from "./chapters/Univariate";
-import { CHAPTERS, EXTRA, GAME } from "./content/nav";
+import { UnityCsharp } from "./chapters/unity/UnityCsharp";
+import { UnityFinish } from "./chapters/unity/UnityFinish";
+import { UnityInput } from "./chapters/unity/UnityInput";
+import { UnityPhysics } from "./chapters/unity/UnityPhysics";
+import { UnityPrefabs } from "./chapters/unity/UnityPrefabs";
+import { UnityScenes } from "./chapters/unity/UnityScenes";
+import { UnityTime } from "./chapters/unity/UnityTime";
+import { UnityUI } from "./chapters/unity/UnityUI";
+import { CHAPTERS, EXTRA, GAME, GODOT, UNITY } from "./content/nav";
 import { loadProgress, markRead, type Progress } from "./lib/progress";
 
 const ALL = [...CHAPTERS, ...GAME];
 
-const VALID = new Set([
-  "home",
-  ...ALL.map((c) => c.id),
-  ...EXTRA.map((e) => e.id),
-]);
+const PAGES: Record<string, ComponentType> = {
+  relationships: Relationships,
+  univariate: Univariate,
+  regression: Regression,
+  ar: AR,
+  arma: ARMA,
+  spectral: Spectral,
+  filtering: Filtering,
+  prediction: Prediction,
+  transfer: Transfer,
+  unity: Unity,
+  "unity-csharp": UnityCsharp,
+  "unity-time": UnityTime,
+  "unity-input": UnityInput,
+  "unity-physics": UnityPhysics,
+  "unity-prefabs": UnityPrefabs,
+  "unity-ui": UnityUI,
+  "unity-scenes": UnityScenes,
+  "unity-finish": UnityFinish,
+  godot: Godot,
+  "godot-gdscript": GodotScript,
+  "godot-time": GodotTime,
+  "godot-input": GodotInput,
+  "godot-bodies": GodotBodies,
+  "godot-instances": GodotInstances,
+  "godot-signals": GodotSignals,
+  "godot-autoload": GodotAutoload,
+  "godot-finish": GodotFinish,
+  playground: Playground,
+  glossary: Glossary,
+};
+
+const VALID = new Set(["home", ...ALL.map((c) => c.id), ...EXTRA.map((e) => e.id)]);
 
 function routeFromHash(): string {
   const raw = window.location.hash.replace(/^#\/?/, "") || "home";
@@ -30,7 +74,13 @@ function routeFromHash(): string {
 }
 
 function neighbors(route: string) {
-  const pack = CHAPTERS.some((c) => c.id === route) ? CHAPTERS : GAME;
+  const pack = CHAPTERS.some((c) => c.id === route)
+    ? CHAPTERS
+    : UNITY.some((c) => c.id === route)
+      ? UNITY
+      : GODOT.some((c) => c.id === route)
+        ? GODOT
+        : [];
   const idx = pack.findIndex((c) => c.id === route);
   if (idx < 0) return { prev: null, next: null };
   return {
@@ -69,6 +119,7 @@ export function App() {
   };
 
   const { prev, next } = neighbors(route);
+  const Page = PAGES[route];
 
   const quizNote = useMemo(() => {
     const scores = Object.values(progress.quizzes);
@@ -79,7 +130,8 @@ export function App() {
   }, [progress]);
 
   const tsRead = progress.read.filter((id) => CHAPTERS.some((c) => c.id === id)).length;
-  const gameRead = progress.read.filter((id) => GAME.some((c) => c.id === id)).length;
+  const unityRead = progress.read.filter((id) => UNITY.some((c) => c.id === id)).length;
+  const godotRead = progress.read.filter((id) => GODOT.some((c) => c.id === id)).length;
 
   return (
     <div className={`shell ${open ? "nav-open" : ""}`}>
@@ -91,12 +143,12 @@ export function App() {
           <span className="brand-mark" aria-hidden="true" />
           <span>
             <strong>Time Series Lab</strong>
-            <em>Plus a Unity and Godot crash course</em>
+            <em>Plus Unity and Godot crash courses</em>
           </span>
         </button>
         <p className="progress-line">
-          {tsRead} of {CHAPTERS.length} time series · {gameRead} of {GAME.length} game
-          · {quizNote}
+          {tsRead} of {CHAPTERS.length} time series · {unityRead} of {UNITY.length} Unity ·{" "}
+          {godotRead} of {GODOT.length} Godot · {quizNote}
         </p>
         <nav>
           <button type="button" className={route === "home" ? "active" : ""} onClick={() => go("home")}>
@@ -114,8 +166,20 @@ export function App() {
               {c.title}
             </button>
           ))}
-          <p className="nav-label">Game engines</p>
-          {GAME.map((c) => (
+          <p className="nav-label">Unity</p>
+          {UNITY.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              className={`${route === c.id ? "active" : ""} ${progress.read.includes(c.id) ? "seen" : ""}`}
+              onClick={() => go(c.id)}
+            >
+              <span className="n">{c.num}</span>
+              {c.title}
+            </button>
+          ))}
+          <p className="nav-label">Godot</p>
+          {GODOT.map((c) => (
             <button
               key={c.id}
               type="button"
@@ -153,19 +217,7 @@ export function App() {
         </header>
         <main id="main">
           {route === "home" && <Home go={go} read={progress.read} />}
-          {route === "relationships" && <Relationships />}
-          {route === "univariate" && <Univariate />}
-          {route === "regression" && <Regression />}
-          {route === "ar" && <AR />}
-          {route === "arma" && <ARMA />}
-          {route === "spectral" && <Spectral />}
-          {route === "filtering" && <Filtering />}
-          {route === "prediction" && <Prediction />}
-          {route === "transfer" && <Transfer />}
-          {route === "unity" && <Unity />}
-          {route === "godot" && <Godot />}
-          {route === "playground" && <Playground />}
-          {route === "glossary" && <Glossary />}
+          {Page && route !== "home" && <Page />}
         </main>
         {(prev || next) && (
           <footer className="pager">

@@ -937,6 +937,54 @@ main {
   margin: 0.3rem 0 0;
 }
 
+.play-wrap {
+  margin: 0;
+}
+
+.playfield {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  background:
+    linear-gradient(#1c232b, #1c232b) padding-box,
+    linear-gradient(#2a333c, #2a333c);
+  background-color: #1c232b;
+  border: 1px solid #2a333c;
+}
+
+.actor {
+  position: absolute;
+  transform: translate(-50%, 0);
+  border-radius: 6px;
+  color: #1c1612;
+  font-size: 0.68rem;
+  font-weight: 600;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.play-cap {
+  margin: 0.4rem 0 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.pad {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.pad button {
+  border-radius: 10px;
+  padding: 0.45rem 0.7rem;
+}
+
+.pad-go {
+  background: var(--teal-soft);
+}
+
 .scrim {
   display: none;
 }
