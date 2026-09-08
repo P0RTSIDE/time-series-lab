@@ -101,11 +101,26 @@ export function ScriptBlock({
   lines: string[];
   does: string;
 }) {
+  const [copied, setCopied] = useState(false);
+  const text = lines.join("\n");
   return (
     <figure className="script-block">
       <figcaption>
         <span>{label}</span>
-        <em>{lang}</em>
+        <span className="script-tools">
+          <em>{lang}</em>
+          <button
+            type="button"
+            className="copy"
+            onClick={() => {
+              void navigator.clipboard.writeText(text);
+              setCopied(true);
+              window.setTimeout(() => setCopied(false), 1600);
+            }}
+          >
+            {copied ? "Copied" : "Copy"}
+          </button>
+        </span>
       </figcaption>
       <pre>
         {lines.map((line, i) => (
@@ -196,6 +211,7 @@ export type QuizQuestion = {
   choices: string[];
   answer: number;
   why: string;
+  wrongs?: string[];
 };
 
 export function Quiz({
@@ -234,26 +250,31 @@ export function Quiz({
               const show = done;
               const isAns = j === q.answer;
               return (
-                <button
-                  key={j}
-                  type="button"
-                  className={`choice ${selected ? "selected" : ""} ${show && isAns ? "right" : ""} ${show && selected && !isAns ? "wrong" : ""}`}
-                  onClick={() => {
-                    if (done) return;
-                    setNeedAll(false);
-                    setPicked((prev) => {
-                      const next = [...prev];
-                      next[i] = j;
-                      return next;
-                    });
-                  }}
-                >
-                  {c}
-                </button>
+                <div key={j} className="choice-block">
+                  <button
+                    type="button"
+                    className={`choice ${selected ? "selected" : ""} ${show && isAns ? "right" : ""} ${show && selected && !isAns ? "wrong" : ""}`}
+                    onClick={() => {
+                      if (done) return;
+                      setNeedAll(false);
+                      setPicked((prev) => {
+                        const next = [...prev];
+                        next[i] = j;
+                        return next;
+                      });
+                    }}
+                  >
+                    {c}
+                  </button>
+                  {show && (isAns || q.wrongs?.[j]) && (
+                    <p className={`choice-why ${isAns ? "ok" : "no"}`}>
+                      {isAns ? q.why : q.wrongs?.[j]}
+                    </p>
+                  )}
+                </div>
               );
             })}
           </div>
-          {done && <p className="why">{q.why}</p>}
         </fieldset>
       ))}
       <div className="quiz-actions">
@@ -283,7 +304,7 @@ export function Quiz({
           </>
         ) : (
           <p className="quiz-score">
-            {correct} of {questions.length} correct. Green is the right choice. The note under each question is the why.
+            {correct} of {questions.length} correct. Green is right. Notes under the choices explain why.
           </p>
         )}
       </div>

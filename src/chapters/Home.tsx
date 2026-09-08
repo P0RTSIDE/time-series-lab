@@ -34,7 +34,7 @@ export function Home({
               <span className="map-num">{c.num}</span>
               <span className="map-title">{c.title}</span>
               <span className="map-blurb">{c.blurb}</span>
-              {read.includes(c.id) && <span className="map-done">Visited</span>}
+              <span className="map-done">{read.includes(c.id) ? "Visited" : ""}</span>
             </button>
           </li>
         ))}
@@ -48,7 +48,7 @@ export function Home({
               <span className="map-num">{c.num}</span>
               <span className="map-title">{c.title}</span>
               <span className="map-blurb">{c.blurb}</span>
-              {read.includes(c.id) && <span className="map-done">Visited</span>}
+              <span className="map-done">{read.includes(c.id) ? "Visited" : ""}</span>
             </button>
           </li>
         ))}
