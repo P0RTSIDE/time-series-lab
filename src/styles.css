@@ -408,6 +408,11 @@ main {
   place-items: center;
 }
 
+.plain-math {
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
 .quiz-hint {
   margin: 0 0 1rem;
   color: var(--muted);
@@ -666,13 +671,72 @@ main {
 }
 
 .why {
-  margin: 0.5rem 0 0;
+  margin: 0.55rem 0 0;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  background: #f3eee4;
   color: #3f382f;
+  font-size: 0.95rem;
+}
+
+.quiz-need {
+  margin: 0.55rem 0 0;
+  color: #6b3a22;
+  font-weight: 600;
 }
 
 .quiz-score {
   font-weight: 600;
   color: var(--teal);
+}
+
+.script-block {
+  margin: 0.9rem 0 1.15rem;
+  padding: 0;
+  background: #161b20;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #2a333c;
+}
+
+.script-block figcaption {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.5rem 0.85rem;
+  background: #1c232b;
+  color: #9aa6b2;
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  font-size: 0.78rem;
+}
+
+.script-block figcaption em {
+  font-style: normal;
+  color: #7ee0c6;
+}
+
+.script-block pre {
+  margin: 0;
+  padding: 0.75rem 0.9rem 0.35rem;
+  overflow-x: auto;
+}
+
+.script-block code {
+  display: block;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: #e8eef4;
+  white-space: pre;
+}
+
+.script-block p {
+  margin: 0;
+  padding: 0.55rem 0.9rem 0.8rem;
+  color: #c5cdd6;
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  font-size: 0.88rem;
+  line-height: 1.45;
 }
 
 .home-h {

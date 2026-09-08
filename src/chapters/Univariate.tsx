@@ -78,9 +78,17 @@ export function Univariate() {
         />
         <h2>Leftovers still have a clock</h2>
         <p>
-          If residual ACF bars sit inside <M expr="\pm 1.96/\sqrt{n}" />, the
-          usual formulas are in good shape. If they linger, two things are true:
-          your uncertainty is wrong, and you left signal on the table.
+          After you fit a line, look at the leftover ACF the same way as in
+          chapter 1. Each bar is “this residual vs the residual h steps ago.”
+          For white leftovers, bars after lag 0 should bounce inside{" "}
+          <M expr="\pm 1.96/\sqrt{n}" />. A slow decay means the errors still
+          remember the past: your usual standard errors are too tight, and an
+          ARMA model can still take that leftover signal.
+        </p>
+        <p>
+          Two leftover shapes ask for different next steps. Spikes at 12, 24, 36
+          mean you missed a season. A smooth fade with no seasonal grid means
+          serial correlation, often an AR(1).
         </p>
       </section>
 

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { LineChart, StemChart } from "../components/Charts";
+import { M } from "../components/MathTex";
 import {
   Callout,
   Card,
@@ -56,29 +57,70 @@ export function Relationships() {
       </Takeaway>
 
       <section className="prose">
-        <h2>Two kinds of relationship</h2>
-        <Cards>
-          <Card title="Autocorrelation">
-            The series vs its own past. High yesterday, high today.
-          </Card>
-          <Card title="Cross-correlation">
-            One series vs another, with a delay. Heat follows cold snaps.
-          </Card>
-        </Cards>
+        <h2>Autocorrelation: a series vs its own past</h2>
+        <p>
+          Autocorrelation asks a simple question: if I line X up with a copy of
+          itself shifted by h steps, do high values still sit on high values?
+          The number you get is between minus 1 and 1, same as ordinary
+          correlation. Lag 0 is always 1, because a series matches itself
+          perfectly. Lag 1 is “today vs yesterday.” Lag 12 in monthly data is
+          “this month vs the same month last year.”
+        </p>
         <Formula
           expr="\rho_X(h)=\mathrm{Corr}(X_t, X_{t+h})"
-          plain="How much X lines up with itself h steps later."
+          plain="The ACF at lag h. A slow fade means long memory. A spike at 12 means a yearly repeat."
         />
+        <p>
+          The ACF plot (sometimes called a correlogram) is those numbers as
+          bars. Dashed guide lines at about <M expr="\pm 1.96/\sqrt{n}" /> are a
+          rough “this could be chance” fence for white noise. A bar that pokes
+          through is worth a look. A whole run of bars that decay slowly is
+          leftover persistence, not one lucky spike.
+        </p>
+
+        <h2>CCF: the same idea, two series</h2>
+        <p>
+          CCF stands for cross-correlation function. It is the ACF’s cousin:
+          instead of lining a series up with itself, you line X up with Y after
+          a shift. You still get a number between minus 1 and 1 at every lag.
+          The plot is the same stem style, but now the lag can be negative.
+        </p>
         <Formula
           expr="\rho_{XY}(h)=\mathrm{Corr}(X_t, Y_{t+h})"
-          plain="Positive h: Y follows X. Negative h: X follows Y."
+          plain="h is how far Y sits after X. The sign of h is the direction of the delay, not ‘good’ or ‘bad’."
         />
+        <Cards>
+          <Card title="Lag 0">
+            Same clock. Do X and Y move together right now?
+          </Card>
+          <Card title="Positive lag">
+            Corr(X now, Y later). A peak at +3 means Y follows X by about 3
+            steps. Heating after a cold snap is this shape.
+          </Card>
+          <Card title="Negative lag">
+            Corr(X now, Y earlier), which is the same as X following Y. The
+            lead is on the other series.
+          </Card>
+          <Card title="The bands">
+            Same chance fence as the ACF. A lonely bar just over the line can
+            be noise. A tall, isolated peak at one lag is the usual “delay”
+            signature.
+          </Card>
+        </Cards>
+        <p>
+          A worked picture: suppose Y is a noisy copy of X from three steps
+          ago. The CCF should peak near +3, and other lags should sit closer
+          to zero. If both series also share a slow climb, that peak smears
+          into a fat mound. The clock is helping both series, so many lags
+          look related even when there is no real delay.
+        </p>
+
         <h2>A shared climb is not a link</h2>
         <Compare
           leftTitle="Looks related"
-          left="Two series both drift up. A scatter of Y vs X looks tight."
+          left="Two series both drift up. A scatter of Y vs X looks tight. The CCF is loud at many lags."
           rightTitle="Often fake"
-          right="The clock drove both. Remove the trend, or look at changes, before you believe it."
+          right="The calendar drove both. Remove the trend, or look at changes, before you trust a peak."
         />
       </section>
 
@@ -150,6 +192,10 @@ export function Relationships() {
           ]}
           xLabel="Time"
         />
+        <p className="chart-caption">
+          Bottom plot is the CCF. The middle is lag 0. Bars to the right are
+          positive lags (Y after X). The dashed lines are a rough chance fence.
+        </p>
         <StemChart
           values={data.cross.map((c) => c.value)}
           xStart={-16}

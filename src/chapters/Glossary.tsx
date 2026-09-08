@@ -76,16 +76,24 @@ const TERMS: { term: string; def: string; math?: string }[] = [
     def: "Equations that turn autocovariances into AR coefficients. The sample version is a quick estimator of phi.",
   },
   {
-    term: "Fixed timestep",
-    def: "A regular physics clock (Unity physics update, Godot physics frames). It is a fixed-rate sample of a dynamical system.",
+    term: "GameObject / component (Unity)",
+    def: "An object in a scene. It always has a Transform. Scripts, meshes, and Rigidbodies are extra components you attach.",
   },
   {
-    term: "Tween / easing",
-    def: "A designed path from one value to another after a start event. In this course it is a short, handmade impulse response.",
+    term: "MonoBehaviour",
+    def: "The C# base class for most Unity scripts. Unity calls Start, Update, and FixedUpdate for you.",
   },
   {
-    term: "Follow camera",
-    def: "An exponential smoother of a target pose. Tight follow is a large weight on the new sample. Loose follow is a stronger low-pass filter.",
+    term: "Node / scene (Godot)",
+    def: "A node is a typed piece of the tree. A scene is a saved tree you can instance, close to a prefab.",
+  },
+  {
+    term: "GDScript",
+    def: "Godot’s built-in language. A script extends a node type and uses _ready, _process, and _physics_process.",
+  },
+  {
+    term: "Signal",
+    def: "A Godot event a node can emit (pressed, timeout). Other nodes connect a function instead of polling every frame.",
   },
 ];
 

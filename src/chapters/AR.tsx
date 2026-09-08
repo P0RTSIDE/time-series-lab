@@ -71,9 +71,17 @@ export function AR() {
           expr="Y_t=\phi_1 Y_{t-1}+\cdots+\phi_p Y_{t-p}+e_t"
           plain="AR(2) checklist: |phi2| < 1, phi1+phi2 < 1, and phi2-phi1 < 1."
         />
+        <p>
+          PACF is partial autocorrelation. At lag 3 it is the leftover
+          association between today and three steps ago after you have already
+          accounted for lags 1 and 2. That is why an AR(p) PACF cuts off: once
+          you include the true lags, later bars have nothing extra to say. The
+          ACF still tails off, because those later lags are implied by the
+          earlier ones (phi to a power, or a damped wiggle).
+        </p>
         <Cards>
           <Card title="ACF">
-            Tails off. Exponential, or a damped wiggle.
+            Tails off. Length of the fade is how sticky the memory is.
           </Card>
           <Card title="PACF">
             Extra correlation after earlier lags are removed. Near zero after p.

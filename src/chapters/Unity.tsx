@@ -6,177 +6,204 @@ import {
   Cards,
   Chapter,
   Compare,
-  Formula,
   Lab,
   Quiz,
+  ScriptBlock,
   Slider,
   Stat,
   Takeaway,
   TryThis,
 } from "../components/UI";
-import {
-  formatNum,
-  lerpSeries,
-  rigidBody,
-  sampleHold,
-  std,
-} from "../lib/ts";
 
 export function Unity() {
-  const [physHz, setPhysHz] = useState(50);
-  const [renderHz, setRenderHz] = useState(60);
-  const [damp, setDamp] = useState(0.18);
-  const [friction, setFriction] = useState(3.2);
-  const [hold, setHold] = useState(1.4);
-  const [interp, setInterp] = useState(true);
+  const [speed, setSpeed] = useState(4);
+  const [usePhysics, setUsePhysics] = useState(false);
+  const [hasBody, setHasBody] = useState(true);
+  const [hasScript, setHasScript] = useState(true);
+  const [hasRenderer, setHasRenderer] = useState(true);
 
-  const data = useMemo(() => {
-    const seconds = 6;
-    const nPhys = Math.max(2, Math.round(seconds * physHz));
-    const nRend = Math.max(2, Math.round(seconds * renderHz));
-    const tPhys = Array.from({ length: nPhys }, (_, i) => (i / (nPhys - 1)) * seconds);
-    const tRend = Array.from({ length: nRend }, (_, i) => (i / (nRend - 1)) * seconds);
-    const input = tPhys.map((t) => (t >= 0.8 && t <= 0.8 + hold ? 1 : 0));
-    const body = rigidBody(tPhys, input, 14, friction);
-    const held = sampleHold(tPhys, body.pos, tRend);
-    const lerped = lerpSeries(tPhys, body.pos, tRend);
-    const displayed = interp ? lerped : held;
-    const camera: number[] = [];
-    let cam = displayed[0] ?? 0;
-    for (const p of displayed) {
-      cam = cam + damp * (p - cam);
-      camera.push(cam);
-    }
-    const stairErr = held.map((p, i) => p - lerped[i]);
-    return {
-      body,
-      displayed,
-      camera,
-      stairJitter: std(stairErr),
-      followLag: std(displayed.map((p, i) => p - camera[i])),
-    };
-  }, [physHz, renderHz, damp, friction, hold, interp]);
+  const path = useMemo(() => {
+    const n = 80;
+    return Array.from({ length: n }, (_, i) => {
+      const t = i / 12;
+      if (!hasScript) return 0;
+      const drive = Math.max(0, Math.sin(t) * speed);
+      return usePhysics && hasBody ? Math.round(drive * 2) / 2 : drive;
+    });
+  }, [speed, usePhysics, hasBody, hasScript]);
+
+  const can = {
+    see: hasRenderer,
+    move: hasScript,
+    collide: hasBody,
+  };
 
   return (
     <Chapter
-      kicker="Chapter 10"
-      title="Time series in Unity"
-      lede="Two clocks: a fixed physics tick, and a frame whenever the picture is ready. Sampling, filters, and forecasts all live in that split."
+      kicker="Game engines · U1"
+      title="Unity basics"
+      lede="A crash course for a game class: the editor, C#, and how a scene actually runs. No time series here."
     >
       <Takeaway>
-        Move on the physics clock. Draw between the last two poses. Follow with
-        a smoother, not a snap.
+        Everything you see is a GameObject wearing components. A script is just
+        one more component that talks to the others.
       </Takeaway>
 
       <section className="prose">
-        <h2>Two clocks, one path</h2>
-        <Compare
-          leftTitle="Physics"
-          left="Regular step. Same difference equation every tick. Collisions stay honest."
-          rightTitle="Display"
-          right="Irregular. Waits on the screen and on hitching. A dropped frame is a bigger step."
-        />
-        <Formula
-          expr="X_{\mathrm{draw}}(t)=(1-\alpha)X_k+\alpha X_{k+1}"
-          plain="Blend the last two physics poses. A linear filter that fills the gaps."
-        />
+        <h2>The editor in three panes</h2>
         <Cards>
-          <Card title="Follow camera">
-            EWMA with another name. Tight: more weight on now. Loose: later turns.
+          <Card title="Hierarchy">
+            The list of objects in the open scene: camera, light, player, floor.
           </Card>
-          <Card title="Netcode">
-            Predict a few steps, then treat the server surprise as a residual.
+          <Card title="Scene / Game">
+            Scene is the edit view. Game is what the player would see.
+          </Card>
+          <Card title="Inspector">
+            The selected object’s components and their numbers. Change speed here
+            without opening the script.
+          </Card>
+          <Card title="Project">
+            Your assets: art, scenes, and scripts. Drag one onto an object to
+            attach it.
           </Card>
         </Cards>
+        <p>
+          A GameObject is an empty named slot. It always has a Transform
+          (position, rotation, scale). Everything else is optional: a mesh so
+          you can see it, a collider so it can bump things, a Rigidbody so
+          physics owns the motion, a script so your rules run.
+        </p>
+
+        <h2>C# you need in week one</h2>
+        <p>
+          Unity scripts are C# classes that inherit from MonoBehaviour. Public
+          fields show up in the Inspector. Methods Unity calls for you have
+          fixed names. You do not call Update yourself.
+        </p>
+        <ScriptBlock
+          lang="C#"
+          label="A first mover"
+          lines={[
+            "using UnityEngine;",
+            "",
+            "public class Mover : MonoBehaviour",
+            "{",
+            "    public float speed = 6f;",
+            "",
+            "    void Update()",
+            "    {",
+            "        float x = Input.GetAxis(\"Horizontal\");",
+            "        transform.Translate(x * speed * Time.deltaTime, 0f, 0f);",
+            "    }",
+            "}",
+          ]}
+          does="Each picture, read the left-right stick or keys, and slide the object. Multiply by the frame duration so speed stays in units per second, not units per frame."
+        />
+        <Cards>
+          <Card title="void Start()">
+            Runs once when the object wakes. Good for grabbing references.
+          </Card>
+          <Card title="void Update()">
+            Runs every displayed frame. Input, animation, UI, most gameplay feel.
+          </Card>
+          <Card title="void FixedUpdate()">
+            Runs on the physics clock. Forces, Rigidbody velocity, anything
+            collisions must agree on.
+          </Card>
+          <Card title="Time.deltaTime">
+            Seconds since the last Update. Use it when you move in Update so a
+            slow machine does not crawl.
+          </Card>
+        </Cards>
+        <Compare
+          leftTitle="Move the Transform"
+          left="Fine for a menu cursor or a kinematic prop. You are the one writing the new position."
+          rightTitle="Move a Rigidbody"
+          right="Set velocity or add a force inside FixedUpdate. Let physics resolve the step so it does not tunnel through walls."
+        />
+        <p>
+          Prefabs are reusable objects. Edit the prefab once and every copy
+          updates. Instantiating one at runtime is how you spawn bullets or
+          enemies. Scenes are separate levels or menus. Load another scene when
+          the round ends.
+        </p>
       </section>
 
-      <Callout title="Plot against seconds" tone="note">
-        A hitch is a spike in step size, not a trend. Plotting against frame
-        index warps the clock.
+      <Callout title="Week-one traps" tone="warn">
+        Forgetting to attach the script. Moving a Rigidbody in Update and
+        watching jitter. Using GetComponent every frame instead of once in
+        Start. Hard-coding Input strings that do not match the Input map.
       </Callout>
 
       <Lab
-        title="Fixed physics, uneven pictures, follow camera"
+        title="What this object can do"
         controls={
           <>
-            <Slider
-              label="Physics ticks per second"
-              value={physHz}
-              min={20}
-              max={90}
-              step={5}
-              onChange={setPhysHz}
-            />
-            <Slider
-              label="Display frames per second"
-              value={renderHz}
-              min={24}
-              max={120}
-              step={2}
-              onChange={setRenderHz}
-            />
-            <Slider
-              label="Camera follow weight"
-              value={damp}
-              min={0.04}
-              max={0.7}
-              step={0.02}
-              format={(v) => v.toFixed(2)}
-              onChange={setDamp}
-            />
-            <Slider
-              label="Drag"
-              value={friction}
-              min={0.4}
-              max={8}
-              step={0.2}
-              format={(v) => v.toFixed(1)}
-              onChange={setFriction}
-            />
-            <Slider
-              label="Input hold (seconds)"
-              value={hold}
-              min={0.3}
-              max={3}
-              step={0.1}
-              format={(v) => v.toFixed(1)}
-              onChange={setHold}
-            />
             <label className="check">
               <input
                 type="checkbox"
-                checked={interp}
-                onChange={(e) => setInterp(e.target.checked)}
+                checked={hasRenderer}
+                onChange={(e) => setHasRenderer(e.target.checked)}
               />
-              Interpolate between physics poses
+              Mesh renderer (you can see it)
             </label>
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={hasBody}
+                onChange={(e) => setHasBody(e.target.checked)}
+              />
+              Rigidbody (physics owns motion)
+            </label>
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={hasScript}
+                onChange={(e) => setHasScript(e.target.checked)}
+              />
+              Mover script
+            </label>
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={usePhysics}
+                onChange={(e) => setUsePhysics(e.target.checked)}
+              />
+              Drive from FixedUpdate
+            </label>
+            <Slider
+              label="Speed"
+              value={speed}
+              min={0}
+              max={8}
+              step={0.5}
+              format={(v) => v.toFixed(1)}
+              onChange={setSpeed}
+            />
             <div className="stat-row">
-              <Stat label="Stair-step jitter" value={formatNum(data.stairJitter, 3)} />
-              <Stat label="Camera lag (SD)" value={formatNum(data.followLag, 3)} />
+              <Stat label="Visible" value={can.see ? "Yes" : "No"} />
+              <Stat label="Scripted" value={can.move ? "Yes" : "No"} />
+              <Stat label="Physics body" value={can.collide ? "Yes" : "No"} />
             </div>
           </>
         }
       >
         <LineChart
           series={[
-            { values: data.body.pos, label: "Physics body", color: "#8ab4f8" },
+            {
+              values: path,
+              label: hasScript ? "Position this frame" : "No script, no motion",
+            },
           ]}
-          xLabel="Physics ticks"
-        />
-        <LineChart
-          series={[
-            { values: data.displayed, label: "What the frame shows", color: "#7ee0c6" },
-            { values: data.camera, label: "Follow camera", color: "#f0b45a" },
-          ]}
-          xLabel="Display frames"
+          xLabel="Frames"
         />
       </Lab>
 
       <TryThis
         items={[
-          "Physics at 20, display at 60, interpolation off: hold, then jump.",
-          "Turn interpolation on. The jumps shrink.",
-          "Raise camera weight to lock on. Lower it for a late, smooth turn.",
+          "Uncheck the script. The object exists but nothing moves it.",
+          "Turn on FixedUpdate drive. The path looks chunkier, like physics ticks.",
+          "Uncheck the renderer in your head: the object can still move, you just would not see it.",
         ]}
       />
 
@@ -184,48 +211,48 @@ export function Unity() {
         id="unity"
         questions={[
           {
-            prompt: "Unity’s physics clock is most like:",
+            prompt: "A script in Unity is usually:",
             choices: [
-              "An irregularly sampled series.",
-              "A fixed-rate discretization of a dynamical system.",
-              "A periodogram of the frame rate.",
-              "An MA(1) fitted to screen brightness.",
+              "A separate program you run beside the editor.",
+              "A component on a GameObject, written as a C# MonoBehaviour.",
+              "The same thing as a scene.",
+              "Only allowed on the camera.",
             ],
             answer: 1,
-            why: "A fixed interval is a regular sample of the continuous motion. The display clock is the irregular one.",
+            why: "You attach the script to an object. Unity then calls Start, Update, and friends on that instance.",
           },
           {
-            prompt: "Drawing the last physics pose with no interpolation tends to:",
+            prompt: "Time.deltaTime is there so that:",
             choices: [
-              "Remove all serial correlation.",
-              "Create visible stair-steps when the two clocks disagree.",
-              "Force the camera gain to 1.",
-              "Make the ACF cutoff at lag 12.",
+              "Physics never runs.",
+              "Motion is in units per second, not units per frame.",
+              "Input is disabled.",
+              "Prefabs cannot be instantiated.",
             ],
             answer: 1,
-            why: "You are holding the last sample until the next one arrives. That is a zero-order hold, and it looks like steps.",
+            why: "A slow frame lasts longer. Multiplying by that duration keeps speed honest.",
           },
           {
-            prompt: "A follow camera that keeps most of its last position is:",
+            prompt: "FixedUpdate is the usual home for:",
             choices: [
-              "A high-pass difference filter.",
-              "A low-pass smoother, so it lags turning points.",
-              "A unit-root random walk.",
-              "Unrelated to any idea in this course.",
+              "UI text only.",
+              "Rigidbody forces and other physics-owned motion.",
+              "Loading a new scene.",
+              "Importing art.",
             ],
             answer: 1,
-            why: "Heavy memory is exponential smoothing. Gain is high at low frequencies and the phase is late.",
+            why: "Physics steps on a fixed clock. Putting forces there keeps collisions consistent.",
           },
           {
-            prompt: "Client prediction plus a server correction is closest to:",
+            prompt: "A prefab is:",
             choices: [
-              "Seasonal dummy regression.",
-              "Forecasting a few steps, then treating the surprise as a residual.",
-              "A raw periodogram with no smoothing.",
-              "White noise by definition.",
+              "A saved, reusable object recipe you can spawn many times.",
+              "A lighting setting.",
+              "A replacement for C#.",
+              "The Game view.",
             ],
-            answer: 1,
-            why: "You project the local state forward, then the server tells you the innovation you missed.",
+            answer: 0,
+            why: "Edit the prefab, and copies can pick up the change. Instantiating it is how you spawn at runtime.",
           },
         ]}
       />

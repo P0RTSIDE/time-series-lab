@@ -3,6 +3,7 @@ import { AR } from "./chapters/AR";
 import { ARMA } from "./chapters/ARMA";
 import { Filtering } from "./chapters/Filtering";
 import { Glossary } from "./chapters/Glossary";
+import { Godot } from "./chapters/Godot";
 import { Home } from "./chapters/Home";
 import { Playground } from "./chapters/Playground";
 import { Prediction } from "./chapters/Prediction";
@@ -11,20 +12,31 @@ import { Relationships } from "./chapters/Relationships";
 import { Spectral } from "./chapters/Spectral";
 import { Transfer } from "./chapters/Transfer";
 import { Unity } from "./chapters/Unity";
-import { Godot } from "./chapters/Godot";
 import { Univariate } from "./chapters/Univariate";
-import { CHAPTERS, EXTRA } from "./content/nav";
+import { CHAPTERS, EXTRA, GAME } from "./content/nav";
 import { loadProgress, markRead, type Progress } from "./lib/progress";
+
+const ALL = [...CHAPTERS, ...GAME];
 
 const VALID = new Set([
   "home",
-  ...CHAPTERS.map((c) => c.id),
+  ...ALL.map((c) => c.id),
   ...EXTRA.map((e) => e.id),
 ]);
 
 function routeFromHash(): string {
   const raw = window.location.hash.replace(/^#\/?/, "") || "home";
   return VALID.has(raw) ? raw : "home";
+}
+
+function neighbors(route: string) {
+  const pack = CHAPTERS.some((c) => c.id === route) ? CHAPTERS : GAME;
+  const idx = pack.findIndex((c) => c.id === route);
+  if (idx < 0) return { prev: null, next: null };
+  return {
+    prev: idx > 0 ? pack[idx - 1] : null,
+    next: idx < pack.length - 1 ? pack[idx + 1] : null,
+  };
 }
 
 export function App() {
@@ -56,9 +68,7 @@ export function App() {
     setOpen(false);
   };
 
-  const idx = CHAPTERS.findIndex((c) => c.id === route);
-  const prev = idx > 0 ? CHAPTERS[idx - 1] : null;
-  const next = idx >= 0 && idx < CHAPTERS.length - 1 ? CHAPTERS[idx + 1] : null;
+  const { prev, next } = neighbors(route);
 
   const quizNote = useMemo(() => {
     const scores = Object.values(progress.quizzes);
@@ -67,6 +77,9 @@ export function App() {
     const t = scores.reduce((s, q) => s + q.total, 0);
     return `${c} / ${t} quiz items`;
   }, [progress]);
+
+  const tsRead = progress.read.filter((id) => CHAPTERS.some((c) => c.id === id)).length;
+  const gameRead = progress.read.filter((id) => GAME.some((c) => c.id === id)).length;
 
   return (
     <div className={`shell ${open ? "nav-open" : ""}`}>
@@ -78,19 +91,31 @@ export function App() {
           <span className="brand-mark" aria-hidden="true" />
           <span>
             <strong>Time Series Lab</strong>
-            <em>Learn by moving the series</em>
+            <em>Plus a Unity and Godot crash course</em>
           </span>
         </button>
         <p className="progress-line">
-          {progress.read.filter((id) => CHAPTERS.some((c) => c.id === id)).length} of{" "}
-          {CHAPTERS.length} chapters · {quizNote}
+          {tsRead} of {CHAPTERS.length} time series · {gameRead} of {GAME.length} game
+          · {quizNote}
         </p>
         <nav>
           <button type="button" className={route === "home" ? "active" : ""} onClick={() => go("home")}>
             Start here
           </button>
-          <p className="nav-label">Course</p>
+          <p className="nav-label">Time series</p>
           {CHAPTERS.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              className={`${route === c.id ? "active" : ""} ${progress.read.includes(c.id) ? "seen" : ""}`}
+              onClick={() => go(c.id)}
+            >
+              <span className="n">{c.num}</span>
+              {c.title}
+            </button>
+          ))}
+          <p className="nav-label">Game engines</p>
+          {GAME.map((c) => (
             <button
               key={c.id}
               type="button"
@@ -122,7 +147,7 @@ export function App() {
           <span className="top-title">
             {route === "home"
               ? "Start here"
-              : CHAPTERS.find((c) => c.id === route)?.title ??
+              : ALL.find((c) => c.id === route)?.title ??
                 EXTRA.find((e) => e.id === route)?.title}
           </span>
         </header>

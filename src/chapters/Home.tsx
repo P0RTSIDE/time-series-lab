@@ -1,4 +1,4 @@
-import { CHAPTERS } from "../content/nav";
+import { CHAPTERS, GAME } from "../content/nav";
 import { Steps } from "../components/UI";
 
 export function Home({
@@ -10,35 +10,39 @@ export function Home({
 }) {
   return (
     <article className="chapter home">
-      <p className="kicker">A self-study course</p>
-      <h1>Learn time series by watching it move</h1>
+      <p className="kicker">Two tracks</p>
+      <h1>Time series, plus a Unity and Godot crash course</h1>
       <p className="lede">
-        Short lesson. Live experiment. Quick check. Drag a slider until the
-        picture matches the idea.
+        The numbered chapters are time series. Unity and Godot sit in their own
+        list so you can cram the engines for a game class without mixing the
+        two subjects.
       </p>
 
       <Steps
         items={[
-          "Read the takeaway and the cards. Skip the rest on a first pass if you want.",
-          "Use the lab. The try-this list tells you which sliders matter.",
-          "Answer the four questions. Progress stays in this browser.",
+          "Time series: read the takeaway, use the lab, then the four questions.",
+          "Game engines: learn the editor words, the script shape, and the two clocks.",
+          "Progress stays in this browser.",
         ]}
       />
 
-      <h2 className="home-h">What you will be able to do</h2>
-      <ul className="skill-grid">
-        <li>Split trend, season, and leftover memory.</li>
-        <li>See when a slope is fine and the standard error is not.</li>
-        <li>Read ACF and PACF well enough to propose an ARMA.</li>
-        <li>Find hidden cycles on a periodogram, then smooth it.</li>
-        <li>Describe a filter by its gain.</li>
-        <li>Forecast with bands that actually grow.</li>
-        <li>Trace an input shock into an output.</li>
-        <li>Spot the same clocks inside Unity and Godot.</li>
-      </ul>
-
+      <h2 className="home-h">Time series</h2>
       <ol className="course-map">
         {CHAPTERS.map((c) => (
+          <li key={c.id}>
+            <button type="button" className="map-card" onClick={() => go(c.id)}>
+              <span className="map-num">{c.num}</span>
+              <span className="map-title">{c.title}</span>
+              <span className="map-blurb">{c.blurb}</span>
+              {read.includes(c.id) && <span className="map-done">Visited</span>}
+            </button>
+          </li>
+        ))}
+      </ol>
+
+      <h2 className="home-h">Game engines</h2>
+      <ol className="course-map">
+        {GAME.map((c) => (
           <li key={c.id}>
             <button type="button" className="map-card" onClick={() => go(c.id)}>
               <span className="map-num">{c.num}</span>

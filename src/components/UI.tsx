@@ -73,6 +73,33 @@ export function TryThis({ items }: { items: string[] }) {
   );
 }
 
+export function ScriptBlock({
+  label,
+  lang,
+  lines,
+  does,
+}: {
+  label: string;
+  lang: string;
+  lines: string[];
+  does: string;
+}) {
+  return (
+    <figure className="script-block">
+      <figcaption>
+        <span>{label}</span>
+        <em>{lang}</em>
+      </figcaption>
+      <pre>
+        {lines.map((line, i) => (
+          <code key={i}>{line === "" ? " " : line}</code>
+        ))}
+      </pre>
+      <p>{does}</p>
+    </figure>
+  );
+}
+
 export function Steps({ items }: { items: string[] }) {
   return (
     <ol className="steps">
@@ -165,11 +192,13 @@ export function Quiz({
 }) {
   const [picked, setPicked] = useState<(number | null)[]>(() => questions.map(() => null));
   const [done, setDone] = useState(false);
+  const [needAll, setNeedAll] = useState(false);
 
   useEffect(() => {
-    setPicked(questions.map(() => null));
+    setPicked(Array.from({ length: questions.length }, () => null));
     setDone(false);
-  }, [id, questions]);
+    setNeedAll(false);
+  }, [id, questions.length]);
 
   const correct = picked.filter((p, i) => p === questions[i].answer).length;
 
@@ -194,6 +223,7 @@ export function Quiz({
                   className={`choice ${selected ? "selected" : ""} ${show && isAns ? "right" : ""} ${show && selected && !isAns ? "wrong" : ""}`}
                   onClick={() => {
                     if (done) return;
+                    setNeedAll(false);
                     setPicked((prev) => {
                       const next = [...prev];
                       next[i] = j;
@@ -211,23 +241,32 @@ export function Quiz({
       ))}
       <div className="quiz-actions">
         {!done ? (
-          <button
-            type="button"
-            className="btn"
-            disabled={picked.some((p) => p == null)}
-            onClick={() => {
-              setDone(true);
-              const score = picked.filter((p, i) => p === questions[i].answer).length;
-              onScore?.(id, score, questions.length);
-              markQuiz(id, score, questions.length);
-              window.dispatchEvent(new Event("tslab-progress"));
-            }}
-          >
-            Reveal answers
-          </button>
+          <>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => {
+                if (picked.some((p) => p == null)) {
+                  setNeedAll(true);
+                  return;
+                }
+                setNeedAll(false);
+                setDone(true);
+                const score = picked.filter((p, i) => p === questions[i].answer).length;
+                onScore?.(id, score, questions.length);
+                markQuiz(id, score, questions.length);
+                window.dispatchEvent(new Event("tslab-progress"));
+              }}
+            >
+              Reveal answers
+            </button>
+            {needAll && (
+              <p className="quiz-need">Answer every question first. Then the explanations will show here.</p>
+            )}
+          </>
         ) : (
           <p className="quiz-score">
-            {correct} of {questions.length} correct
+            {correct} of {questions.length} correct. Green is the right choice. The note under each question is the why.
           </p>
         )}
       </div>

@@ -11,8 +11,8 @@ An interactive self-study site for time series analysis. Lessons, live simulatio
 - Linear filtering
 - Prediction
 - Transfer function models
-- Time series in Unity
-- Time series in Godot
+- Unity basics (separate crash course)
+- Godot basics (separate crash course)
 
 Progress and quiz scores stay in the local browser.
 

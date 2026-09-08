@@ -54,6 +54,13 @@ export function ARMA() {
           expr="\rho(1)=\frac{\theta}{1+\theta^2}"
           plain="The only nonzero lag. Two thetas can share this number. Invertibility picks one."
         />
+        <p>
+          Invertibility means you can recover the shocks from past Y values.
+          For MA(1) that is |theta| under 1. Without it, theta and 1/theta can
+          tell the same correlation story, and estimation gets messy. Stationary
+          is “the series does not wander off.” Invertible is “the shocks are
+          readable from the series.”
+        </p>
         <h2>Mix them: ARMA</h2>
         <Formula
           expr="Y_t=\phi Y_{t-1}+e_t+\theta e_{t-1}"

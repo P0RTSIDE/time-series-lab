@@ -1,186 +1,215 @@
 import { useMemo, useState } from "react";
-import { LineChart, StemChart } from "../components/Charts";
+import { LineChart } from "../components/Charts";
 import {
   Callout,
   Card,
   Cards,
   Chapter,
   Compare,
-  Formula,
   Lab,
   Quiz,
+  ScriptBlock,
   Slider,
   Stat,
   Takeaway,
   TryThis,
 } from "../components/UI";
-import { acf, formatNum, lerpSeries, rigidBody, tweenSeries } from "../lib/ts";
-import type { EaseKind } from "../lib/ts";
 
 export function Godot() {
-  const [ticks, setTicks] = useState(60);
-  const [frames, setFrames] = useState(30);
-  const [kind, setKind] = useState<EaseKind>("out");
-  const [duration, setDuration] = useState(40);
-  const [target, setTarget] = useState(4);
-  const [moveToward, setMoveToward] = useState(0.22);
+  const [speed, setSpeed] = useState(180);
+  const [useSignals, setUseSignals] = useState(true);
+  const [hasBody, setHasBody] = useState(true);
+  const [hasSprite, setHasSprite] = useState(true);
+  const [jump, setJump] = useState(false);
 
-  const data = useMemo(() => {
-    const n = 160;
-    const start = 20;
-    const tween = tweenSeries(n, start, duration, target, kind);
-    const seek = new Array(n).fill(0);
-    for (let t = 1; t < n; t++) {
-      const goal = t >= start ? target : 0;
-      seek[t] = seek[t - 1] + moveToward * (goal - seek[t - 1]);
+  const path = useMemo(() => {
+    const n = 80;
+    let y = 0;
+    let v = 0;
+    const out: number[] = [];
+    for (let i = 0; i < n; i++) {
+      if (!hasBody) {
+        out.push(0);
+        continue;
+      }
+      if (jump && i === 10) v = 7;
+      v -= 0.35;
+      y += v * (speed / 400);
+      if (y < 0) {
+        y = 0;
+        v = 0;
+      }
+      out.push(y);
     }
-    const seconds = 5;
-    const nPhys = Math.max(2, Math.round(seconds * ticks));
-    const nRend = Math.max(2, Math.round(seconds * frames));
-    const tPhys = Array.from({ length: nPhys }, (_, i) => (i / (nPhys - 1)) * seconds);
-    const tRend = Array.from({ length: nRend }, (_, i) => (i / (nRend - 1)) * seconds);
-    const input = tPhys.map((t) => (t >= 0.6 && t <= 1.8 ? 1 : 0));
-    const body = rigidBody(tPhys, input, 12, 2.8);
-    const drawn = lerpSeries(tPhys, body.pos, tRend);
-    return {
-      tween,
-      seek,
-      body: body.pos,
-      drawn,
-      rho: acf(seek, 16),
-      n,
-    };
-  }, [ticks, frames, kind, duration, target, moveToward]);
+    return out;
+  }, [speed, hasBody, jump]);
 
   return (
     <Chapter
-      kicker="Chapter 11"
-      title="Time series in Godot"
-      lede="Same two clocks as Unity, plus tweens: a transfer function you draw by hand."
+      kicker="Game engines · G1"
+      title="Godot basics"
+      lede="A crash course for a game class: nodes, scenes, GDScript, and signals. Separate from the time series track."
     >
       <Takeaway>
-        Collisions on the physics clock. Fades and UI on the idle clock. A tween
-        is a planned echo of a one-sample start.
+        A Godot scene is a tree of nodes. A script sits on one node and talks
+        to its children. Signals are how nodes shout “I was pressed” without
+        polling every frame.
       </Takeaway>
 
       <section className="prose">
-        <h2>Two calendars</h2>
-        <Compare
-          leftTitle="Physics ticks"
-          left="Fixed timer. Bodies and contacts belong here."
-          rightTitle="Idle frames"
-          right="As often as a picture can be drawn. Fades, UI, cosmetic bob."
-        />
-        <h2>Tween vs move-toward</h2>
-        <Formula
-          expr="Y_t=A+(B-A)\,e((t-t_0)/d)"
-          plain="Start event at t0. Arrive at B after duration d. Linear, ease-out, or an S."
-        />
+        <h2>Nodes, not GameObjects</h2>
+        <p>
+          Unity hangs components on an empty object. Godot makes the type the
+          node itself: a Sprite2D is a node, a CharacterBody2D is a node, a
+          Timer is a node. You nest them. A player might be a CharacterBody2D
+          with a Sprite2D and a CollisionShape2D as children.
+        </p>
         <Cards>
-          <Card title="Tween">
-            Finishes on time. Impulse response you chose. Presentation, not contact.
+          <Card title="Scene tree">
+            The live list of nodes. Parent transforms move the children.
           </Card>
-          <Card title="Move-toward">
-            Each tick takes a fraction of the remaining gap. AR(1) toward a target.
+          <Card title="Inspector">
+            The selected node’s exported numbers. Same job as Unity’s Inspector.
+          </Card>
+          <Card title="FileSystem">
+            Your art, scenes, and scripts. A scene file is a reusable packed
+            tree, like a prefab.
+          </Card>
+          <Card title="2D / 3D / Script">
+            Edit the world, or the script on the selected node.
           </Card>
         </Cards>
+
+        <h2>GDScript you need in week one</h2>
+        <p>
+          GDScript is Python-like: indentation matters, types are optional but
+          worth adding. A script extends a node type. Godot calls _ready once
+          and _process or _physics_process every tick. The dollar sign grabs a
+          child by name.
+        </p>
+        <ScriptBlock
+          lang="GDScript"
+          label="A first side-scroller body"
+          lines={[
+            "extends CharacterBody2D",
+            "",
+            "@export var speed := 200.0",
+            "@export var jump_speed := -320.0",
+            "",
+            "func _physics_process(delta: float) -> void:",
+            "    var x := Input.get_axis(\"left\", \"right\")",
+            "    velocity.x = x * speed",
+            "    if not is_on_floor():",
+            "        velocity.y += 900.0 * delta",
+            "    if Input.is_action_just_pressed(\"jump\") and is_on_floor():",
+            "        velocity.y = jump_speed",
+            "    move_and_slide()",
+          ]}
+          does="Each physics tick, read the move axis, apply gravity, jump if you just pressed the action and you are on the floor, then let Godot resolve the slide against walls."
+        />
+        <Cards>
+          <Card title="_ready()">
+            Once, after the node and its children exist. Connect signals here.
+          </Card>
+          <Card title="_process(delta)">
+            Every idle frame. Visuals, UI, non-physics motion.
+          </Card>
+          <Card title="_physics_process(delta)">
+            Fixed physics tick. CharacterBody2D and move_and_slide live here.
+          </Card>
+          <Card title="@export">
+            Shows the variable in the Inspector, like a public field in Unity.
+          </Card>
+        </Cards>
+        <Compare
+          leftTitle="Signals"
+          left="A button emits pressed. You connect that to a function. No need to ask ‘are they clicking?’ every frame."
+          rightTitle="Polling"
+          right="Input.is_action_pressed is polling. Fine for hold-to-run. Use a signal for one-shot UI and timers."
+        />
+        <p>
+          Instancing a packed scene is Godot’s spawn. Groups are tags. The
+          animation player is a node you point at other nodes’ properties.
+          If you already know Unity: GameObject plus components maps to a
+          small node tree. C# MonoBehaviour maps to a GDScript that extends
+          the root node. Prefab maps to a saved scene.
+        </p>
       </section>
 
-      <Callout title="Easing is not physics" tone="tip">
-        A tween hits B on schedule even if something collided. Use the physics
-        clock for things that must agree with other bodies.
+      <Callout title="Week-one traps" tone="warn">
+        Script extends the wrong type (Sprite2D vs CharacterBody2D). Forgetting
+        move_and_slide, so velocity never becomes motion. Connecting a signal
+        twice in _ready and getting double jumps. Child names that do not match
+        the dollar path.
       </Callout>
 
       <Lab
-        title="Tweens, move-toward, and a second clock"
+        title="A tiny jump"
         controls={
           <>
-            <div className="seg">
-              {(
-                [
-                  ["linear", "Linear"],
-                  ["out", "Ease out"],
-                  ["inout", "Ease in-out"],
-                ] as const
-              ).map(([k, lab]) => (
-                <button
-                  key={k}
-                  type="button"
-                  className={kind === k ? "on" : ""}
-                  onClick={() => setKind(k)}
-                >
-                  {lab}
-                </button>
-              ))}
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={hasSprite}
+                onChange={(e) => setHasSprite(e.target.checked)}
+              />
+              Sprite child (you can see it)
+            </label>
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={hasBody}
+                onChange={(e) => setHasBody(e.target.checked)}
+              />
+              CharacterBody2D root
+            </label>
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={useSignals}
+                onChange={(e) => setUseSignals(e.target.checked)}
+              />
+              Jump from a signal (not a hold)
+            </label>
+            <Slider
+              label="Move speed"
+              value={speed}
+              min={60}
+              max={320}
+              step={10}
+              onChange={setSpeed}
+            />
+            <button
+              type="button"
+              className="btn"
+              onClick={() => setJump((v) => !v)}
+            >
+              {jump ? "Reset jump" : "Fire jump"}
+            </button>
+            <div className="stat-row">
+              <Stat label="Visible" value={hasSprite ? "Yes" : "Invisible body"} />
+              <Stat label="Can slide" value={hasBody ? "Yes" : "No body"} />
+              <Stat label="Jump style" value={useSignals ? "Signal" : "Poll"} />
             </div>
-            <Slider
-              label="Tween duration (steps)"
-              value={duration}
-              min={8}
-              max={80}
-              step={2}
-              onChange={setDuration}
-            />
-            <Slider
-              label="Target height"
-              value={target}
-              min={1}
-              max={7}
-              step={0.5}
-              format={(v) => v.toFixed(1)}
-              onChange={setTarget}
-            />
-            <Slider
-              label="Move-toward fraction"
-              value={moveToward}
-              min={0.04}
-              max={0.6}
-              step={0.02}
-              format={(v) => v.toFixed(2)}
-              onChange={setMoveToward}
-            />
-            <Slider
-              label="Physics ticks per second"
-              value={ticks}
-              min={20}
-              max={120}
-              step={5}
-              onChange={setTicks}
-            />
-            <Slider
-              label="Idle frames per second"
-              value={frames}
-              min={15}
-              max={90}
-              step={3}
-              onChange={setFrames}
-            />
-            <Stat label="Tween vs seek ACF(1)" value={formatNum(data.rho[1])} />
           </>
         }
       >
         <LineChart
           series={[
-            { values: data.tween, label: "Tween to a target", color: "#7ee0c6" },
-            { values: data.seek, label: "Move toward the same target", color: "#f0b45a" },
+            {
+              values: path,
+              label: hasBody ? "Height" : "No body, no move_and_slide",
+            },
           ]}
-          xLabel="Steps"
-        />
-        <StemChart values={data.rho} yLabel="ACF of move-toward" bands={1.96 / Math.sqrt(data.n)} />
-        <LineChart
-          series={[
-            { values: data.body, label: "Physics body", color: "#8ab4f8" },
-            { values: data.drawn, label: "Idle-frame reconstruction", color: "#7ee0c6" },
-          ]}
-          xLabel="Samples (different clocks)"
+          xLabel="Physics ticks"
         />
       </Lab>
 
       <TryThis
         items={[
-          "Switch easing. The tween always finishes on time.",
-          "Lower the move-toward fraction. It creeps, and the ACF stays high.",
-          "Bottom plot: physics on one grid, idle frames on another.",
+          "Fire jump with a body. The arc is gravity plus one upward kick.",
+          "Uncheck the body. Velocity has nowhere to go.",
+          "Signal vs poll: a jump should be a press, not a hold. That is why buttons emit a signal.",
         ]}
       />
 
@@ -188,48 +217,48 @@ export function Godot() {
         id="godot"
         questions={[
           {
-            prompt: "Idle frames and physics ticks should be treated as:",
+            prompt: "A Godot scene is best thought of as:",
             choices: [
-              "The same sampling calendar.",
-              "Two clocks that need an explicit conversion when they meet.",
-              "Proof the series is nonstationary.",
-              "A replacement for the periodogram.",
+              "A single C# file.",
+              "A tree of nodes you can save and instance.",
+              "The physics server only.",
+              "A replacement for art.",
             ],
             answer: 1,
-            why: "They are different sampling rates of related series. Crossing them without interpolation or a shared time base creates aliasing and stair-steps.",
+            why: "The scene file is a packed node tree, close to a Unity prefab plus hierarchy.",
           },
           {
-            prompt: "A tween from A to B after a one-sample start is:",
+            prompt: "move_and_slide should run in:",
             choices: [
-              "White noise.",
-              "A designed impulse response, a short transfer function.",
-              "An AR(12) by definition.",
-              "Only valid if the ACF is zero.",
+              "_ready only.",
+              "_physics_process, on a CharacterBody2D.",
+              "The FileSystem dock.",
+              "Any node, any time, with no body.",
             ],
             answer: 1,
-            why: "The start event is the impulse. The easing curve is the weight sequence that follows.",
+            why: "The body owns velocity. The physics tick applies it against colliders.",
           },
           {
-            prompt: "Move-toward with a small fraction each tick behaves like:",
+            prompt: "@export on a variable means:",
             choices: [
-              "A high-pass difference.",
-              "An AR(1) pulled toward a target, so it has long memory.",
-              "A raw unsmoothed periodogram.",
-              "Seasonal differencing at lag 12.",
+              "The game cannot start.",
+              "The Inspector can edit that value on the node.",
+              "The node is hidden.",
+              "Signals are disabled.",
             ],
             answer: 1,
-            why: "Each step keeps most of the last value and adds a little of the gap. That is exponential approach, the same family as AR(1).",
+            why: "Same idea as a public field on a Unity MonoBehaviour.",
           },
           {
-            prompt: "Why keep collisions on the physics clock, not the idle clock?",
+            prompt: "A signal is useful when:",
             choices: [
-              "Idle frames are always slower.",
-              "A variable step changes the discrete dynamics, so contacts would depend on hitching.",
-              "Tweens cannot run during physics.",
-              "The ACF is undefined on the physics clock.",
+              "You want to ask every frame if a button is down.",
+              "Something happened once and other nodes should react.",
+              "You need a new mesh.",
+              "You are writing only shaders.",
             ],
             answer: 1,
-            why: "Irregular steps are a different numerical method each frame. Fixed ticks keep the same difference equation.",
+            why: "Pressed, timeout, body_entered are events. Connect them instead of polling.",
           },
         ]}
       />

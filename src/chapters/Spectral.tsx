@@ -89,8 +89,12 @@ export function Spectral() {
           plain="A hidden wave of period n/k spikes at frequency k/n. Raw plot is noisy. Smooth nearby bars to see the shape."
         />
         <p>
-          Positive AR(1) piles power at low frequency (slow wander). Negative
-          phi piles it near 1/2 (flip-flop).
+          How to read it: the horizontal axis is frequency (cycles per
+          observation). The vertical axis is power. A hidden yearly cycle in
+          monthly data should spike near 1/12. The raw periodogram chatters.
+          Average a few neighbors (smoothing) to see the shape. Positive AR(1)
+          piles power at low frequency (slow wander). Negative phi piles it
+          near 1/2 (flip-flop).
         </p>
       </section>
 
