@@ -102,6 +102,7 @@ export function GodotAutoload() {
 
       <Lab
         title="Two rooms, one count"
+        explain="Hall and yard are two rooms. Pick up a coin, take the door, and the count stays. That persistent number is the fake Autoload."
         controls={
           <>
             <button type="button" className="btn" onClick={() => setRoom(here ? "yard" : "hall")}>

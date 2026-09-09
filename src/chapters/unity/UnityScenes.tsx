@@ -96,6 +96,7 @@ export function UnityScenes() {
 
       <Lab
         title="Two rooms, one score"
+        explain="Door swaps room A and B. Colors and props change. The score number stays, like DontDestroyOnLoad keeping a manager across LoadScene."
         controls={
           <>
             <button type="button" className="btn" onClick={() => setScore((n) => n + 1)}>

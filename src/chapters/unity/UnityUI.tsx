@@ -89,6 +89,7 @@ export function UnityUI() {
 
       <Lab
         title="A button that writes the score"
+        explain="The button stands in for On Click. Each press adds to the score panel, like updating TMP text on a Canvas."
         controls={
           <>
             <button type="button" className="btn" onClick={() => setScore((n) => n + 1)}>

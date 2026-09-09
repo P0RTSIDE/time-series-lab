@@ -104,6 +104,7 @@ export function UnityCsharp() {
 
       <Lab
         title="A public bool on a cube"
+        explain="The stage is a stand-in cube. Toggle the bool and drag scale to see how Inspector fields change color and size. There is no graph here, only the object."
         controls={
           <>
             <label className="check">

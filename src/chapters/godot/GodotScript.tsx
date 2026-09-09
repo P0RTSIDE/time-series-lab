@@ -100,6 +100,7 @@ export function GodotScript() {
 
       <Lab
         title="Exported speed and tint"
+        explain="P is the root node. S is a child sprite. The sliders act like @export fields in the Inspector: speed for motion, tint for the sprite color."
         controls={
           <>
             <Slider label="speed" value={speed} min={40} max={320} step={10} onChange={setSpeed} />

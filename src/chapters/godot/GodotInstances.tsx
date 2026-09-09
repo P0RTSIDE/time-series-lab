@@ -98,6 +98,7 @@ export function GodotInstances() {
 
       <Lab
         title="Spawn and clear"
+        explain="Click the stage to instance a coin child. Clear frees every child. The count is how many packed scenes you spawned."
         controls={
           <>
             <button type="button" className="btn" onClick={() => setCoins([])}>

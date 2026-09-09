@@ -115,6 +115,7 @@ export function UnityInput() {
 
       <Lab
         title="Keys, pad, and the axis number"
+        explain="The square is the player. Arrows or the pad write an axis from -1 to 1 and slide it. Jump is a one-frame press, so it hops once, not forever while you hold."
         controls={
           <>
             <Pad

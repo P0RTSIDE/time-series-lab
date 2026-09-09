@@ -97,6 +97,7 @@ export function GodotSignals() {
 
       <Lab
         title="Press adds, hold does not"
+        explain="Press the button once to add score. Timer ticks alone should not. That is the difference between a signal and polling every frame."
         controls={
           <>
             <label className="check">

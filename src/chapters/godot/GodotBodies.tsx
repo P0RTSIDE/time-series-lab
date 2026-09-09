@@ -122,6 +122,7 @@ export function GodotBodies() {
 
       <Lab
         title="Jump, gravity, floor"
+        explain="Jump from the floor, then gravity brings you back. Untick the body and the same press does nothing, because move_and_slide needs a CharacterBody2D."
         controls={
           <>
             <label className="check">

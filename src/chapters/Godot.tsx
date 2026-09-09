@@ -155,6 +155,7 @@ export function Godot() {
 
       <Lab
         title="A tiny jump"
+        explain="The chart is height over time after you fire a jump. Left to right is physics ticks. Up means off the floor. The arc is one kick upward, then gravity pulls back down. Uncheck CharacterBody2D and the line stays flat: velocity has nowhere to go without a body and move_and_slide."
         controls={
           <>
             <label className="check">
@@ -208,11 +209,18 @@ export function Godot() {
           series={[
             {
               values: path,
-              label: hasBody ? "Height" : "No body, no move_and_slide",
+              label: hasBody ? "Height off the floor" : "Flat: no body",
             },
           ]}
-          xLabel="Physics ticks"
+          xLabel="Time (physics ticks)"
         />
+        <p className="lab-readout">
+          {jump
+            ? hasBody
+              ? "Jump fired. Watch the arc peak, then return to zero on the floor."
+              : "Jump pressed, but there is no CharacterBody2D to move."
+            : "Press Fire jump to launch once. Reset clears the arc."}
+        </p>
       </Lab>
 
       <TryThis

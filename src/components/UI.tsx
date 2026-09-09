@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import { M } from "./MathTex";
+import { explainCodeLine } from "../lib/codeExplain";
 import { markQuiz } from "../lib/progress";
+import { M } from "./MathTex";
 
 export function Takeaway({ children }: { children: ReactNode }) {
   return <p className="takeaway">{children}</p>;
@@ -95,14 +96,24 @@ export function ScriptBlock({
   lang,
   lines,
   does,
+  notes,
 }: {
   label: string;
   lang: string;
   lines: string[];
   does: string;
+  notes?: (string | null | undefined)[];
 }) {
   const [copied, setCopied] = useState(false);
+  const [open, setOpen] = useState<number | null>(null);
   const text = lines.join("\n");
+
+  const noteFor = (i: number) => {
+    const custom = notes?.[i];
+    if (custom != null && custom !== "") return custom;
+    return explainCodeLine(lines[i] ?? "", lang);
+  };
+
   return (
     <figure className="script-block">
       <figcaption>
@@ -122,11 +133,37 @@ export function ScriptBlock({
           </button>
         </span>
       </figcaption>
+      <p className="script-hint">Click any line for a plain-language note.</p>
       <pre>
-        {lines.map((line, i) => (
-          <code key={i}>{line === "" ? " " : line}</code>
-        ))}
+        {lines.map((line, i) => {
+          const empty = line.trim() === "";
+          const active = open === i;
+          return (
+            <button
+              key={i}
+              type="button"
+              className={`script-line ${empty ? "empty" : ""} ${active ? "on" : ""}`}
+              disabled={empty}
+              onClick={() => setOpen(active ? null : i)}
+            >
+              <span className="script-n">{i + 1}</span>
+              <code>{line === "" ? " " : line}</code>
+            </button>
+          );
+        })}
       </pre>
+      {open != null && noteFor(open) && (
+        <aside className="script-pop" role="status">
+          <header>
+            <span>Line {open + 1}</span>
+            <button type="button" className="copy" onClick={() => setOpen(null)}>
+              Close
+            </button>
+          </header>
+          <code>{lines[open] === "" ? " " : lines[open]}</code>
+          <p>{noteFor(open)}</p>
+        </aside>
+      )}
       <p>{does}</p>
     </figure>
   );
@@ -335,10 +372,12 @@ export function Chapter({
 
 export function Lab({
   title,
+  explain,
   children,
   controls,
 }: {
   title: string;
+  explain?: string;
   children: ReactNode;
   controls: ReactNode;
 }) {
@@ -347,6 +386,7 @@ export function Lab({
       <header className="lab-head">
         <span className="eyebrow">Interactive lab</span>
         <h2>{title}</h2>
+        {explain && <p className="lab-explain">{explain}</p>}
       </header>
       <div className="lab-grid">
         <div className="lab-controls">{controls}</div>

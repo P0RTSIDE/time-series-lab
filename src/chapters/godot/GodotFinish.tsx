@@ -103,6 +103,7 @@ export function GodotFinish() {
 
       <Lab
         title="Attack tween and flash"
+        explain="Attack lunges, flashes, then returns. Stretch the tween to see the ease. Mash is gated so one attack finishes before the next starts."
         controls={
           <>
             <Slider label="Tween ms" value={ms} min={80} max={360} step={20} onChange={setMs} />

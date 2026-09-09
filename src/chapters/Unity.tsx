@@ -144,6 +144,7 @@ export function Unity() {
 
       <Lab
         title="What this object can do"
+        explain="The chart is position over time, not a picture of the 3D scene. Left to right is frames. Up means the object has moved farther along its path. The smooth hump is one move cycle. Turn off the mover script and the line goes flat because nothing is driving the object. Turn on FixedUpdate and the curve looks chunkier, like physics ticks instead of every display frame."
         controls={
           <>
             <label className="check">
@@ -199,11 +200,19 @@ export function Unity() {
           series={[
             {
               values: path,
-              label: hasScript ? "Position this frame" : "No script, no motion",
+              label: hasScript ? "How far it has moved" : "Flat: no mover script",
             },
           ]}
-          xLabel="Frames"
+          xLabel="Time (frames)"
         />
+        <p className="lab-readout">
+          {hasScript
+            ? usePhysics && hasBody
+              ? "Physics clock: the path steps in chunks."
+              : "Update clock: the path is smooth across frames."
+            : "No script attached, so position never changes."}
+          {!hasRenderer ? " Renderer off: it would still move, you just would not see it in game." : ""}
+        </p>
       </Lab>
 
       <TryThis

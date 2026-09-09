@@ -96,6 +96,7 @@ export function UnityPrefabs() {
 
       <Lab
         title="Click to instantiate"
+        explain="Click the dark stage to spawn a shot copy. Each click is like Instantiate. Clear destroys every live copy. The count is how many you made."
         controls={
           <>
             <button type="button" className="btn" onClick={() => setShots([])}>

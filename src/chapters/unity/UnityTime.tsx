@@ -99,6 +99,7 @@ export function UnityTime() {
 
       <Lab
         title="One press, two step sizes"
+        explain="The box on the stage is your object. Each press moves it. With deltaTime on, the same speed number travels a steady distance. With it off, a fast press jumps farther."
         controls={
           <>
             <label className="check">

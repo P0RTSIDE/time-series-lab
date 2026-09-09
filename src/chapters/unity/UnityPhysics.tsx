@@ -126,6 +126,7 @@ export function UnityPhysics() {
 
       <Lab
         title="Jump, gravity, floor"
+        explain="The player can jump. Gravity pulls it down. With Rigidbody style it lands on the floor strip. With Translate style it can sink through, which is the usual bug when you skip physics."
         controls={
           <>
             <label className="check">

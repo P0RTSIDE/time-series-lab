@@ -113,6 +113,7 @@ export function UnityFinish() {
 
       <Lab
         title="Attack flash and a fading hit"
+        explain="Attack flashes the actor, then a hit label appears and fades. The timer is a stand-in for WaitForSeconds in a coroutine."
         controls={
           <>
             <Pad onAction={attack} actionLabel="Attack" />

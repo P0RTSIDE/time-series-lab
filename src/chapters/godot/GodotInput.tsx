@@ -117,6 +117,7 @@ export function GodotInput() {
 
       <Lab
         title="Pad, keys, and action state"
+        explain="The body is your CharacterBody2D stand-in. Pad and keys set action state. Jump is just_pressed: one hop, not a hold."
         controls={
           <>
             <Pad onLeft={left} onRight={right} onAction={jump} actionLabel="Jump" />

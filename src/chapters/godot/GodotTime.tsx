@@ -80,6 +80,7 @@ export function GodotTime() {
 
       <Lab
         title="One press, two step sizes"
+        explain="Each press moves the node. With delta on, speed means units per second. With delta off, the same number jumps a raw step every press."
         controls={
           <>
             <label className="check">
