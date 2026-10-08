@@ -18,6 +18,7 @@ import { Prediction } from "./chapters/Prediction";
 import { Regression } from "./chapters/Regression";
 import { Relationships } from "./chapters/Relationships";
 import { Spectral } from "./chapters/Spectral";
+import { TrackerQuiz } from "./chapters/TrackerQuiz";
 import { Transfer } from "./chapters/Transfer";
 import { Unity } from "./chapters/Unity";
 import { Univariate } from "./chapters/Univariate";
@@ -62,6 +63,7 @@ const PAGES: Record<string, ComponentType> = {
   "godot-signals": GodotSignals,
   "godot-autoload": GodotAutoload,
   "godot-finish": GodotFinish,
+  "tracker-quiz": TrackerQuiz,
   playground: Playground,
   glossary: Glossary,
 };

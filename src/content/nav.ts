@@ -179,6 +179,7 @@ export const GODOT: ChapterMeta[] = [
 export const GAME = [...UNITY, ...GODOT];
 
 export const EXTRA = [
+  { id: "tracker-quiz", title: "Tracker quiz" },
   { id: "playground", title: "Playground" },
   { id: "glossary", title: "Glossary" },
 ] as const;

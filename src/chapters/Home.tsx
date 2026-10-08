@@ -34,6 +34,20 @@ export function Home({
 
       <h2 className="home-h">Godot</h2>
       <Map items={GODOT} go={go} read={read} />
+
+      <h2 className="home-h">Project quiz</h2>
+      <ol className="course-map">
+        <li>
+          <button type="button" className="map-card" onClick={() => go("tracker-quiz")}>
+            <span className="map-num">Q</span>
+            <span className="map-title">Congressional tracker</span>
+            <span className="map-blurb">
+              Questions about the voting, donor, and stock timing site: stack, data, and what a signal means.
+            </span>
+            <span className="map-done">{read.includes("tracker-quiz") ? "Visited" : ""}</span>
+          </button>
+        </li>
+      </ol>
     </article>
   );
 }
