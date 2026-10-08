@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Playfield } from "../../components/Playfield";
+import { useEffect, useRef, useState } from "react";
+import { Pad, Playfield, usePlayer } from "../../components/Playfield";
 import {
   Callout,
   Chapter,
@@ -20,6 +20,37 @@ export function UnityScenes() {
   const isA = room === "A";
   const floor = isA ? "#2f6f6a" : "#7a4a32";
   const prop = isA ? "#d8c48a" : "#c9a0d4";
+  const picked = useRef(false);
+  const atDoor = useRef(false);
+  const roomNow = useRef(room);
+  roomNow.current = room;
+
+  const player = usePlayer({
+    floor: 16,
+    startX: 46,
+    onMove: (nx, ny) => {
+      const a = roomNow.current === "A";
+      const propX = a ? 28 : 72;
+      if (!picked.current && Math.abs(nx - propX) < 8 && ny < 40) {
+        picked.current = true;
+        setScore((n) => n + 1);
+      }
+      const doorX = a ? 78 : 22;
+      const near = Math.abs(nx - doorX) < 8 && ny < 42;
+      if (near && !atDoor.current) {
+        atDoor.current = true;
+        setRoom(a ? "B" : "A");
+      } else if (!near) {
+        atDoor.current = false;
+      }
+    },
+  });
+
+  useEffect(() => {
+    picked.current = false;
+    atDoor.current = false;
+    player.place(46);
+  }, [room]);
 
   return (
     <Chapter
@@ -96,9 +127,16 @@ export function UnityScenes() {
 
       <Lab
         title="Two rooms, one score"
-        explain="Door swaps room A and B. Colors and props change. The score number stays, like DontDestroyOnLoad keeping a manager across LoadScene."
+        explain="Walk and jump are still here. Door swaps room A and B, and walking into the door does the same. Colors and props change. The player starts again in the new room, because that scene loaded fresh. The score number stays, like DontDestroyOnLoad keeping a manager across LoadScene."
         controls={
           <>
+            <Pad
+              onLeft={() => player.walk(-1)}
+              onRight={() => player.walk(1)}
+              onUp={player.jump}
+              onAction={player.jump}
+              actionLabel="Jump"
+            />
             <button type="button" className="btn" onClick={() => setScore((n) => n + 1)}>
               Collect (+1)
             </button>
@@ -117,16 +155,16 @@ export function UnityScenes() {
             { id: "floor", x: 50, y: 0, w: 420, h: 22, color: floor, label: `Room ${room}` },
             { id: "prop", x: isA ? 28 : 72, y: 28, w: 36, h: 36, color: prop, label: isA ? "lamp" : "vase" },
             { id: "door", x: isA ? 78 : 22, y: 20, w: 28, h: 40, color: "#c4b08a", label: "door" },
-            { id: "p", x: 50, y: 20, w: 26, h: 26, color: "#e8b07a", label: "P" },
+            { id: "p", x: player.x, y: player.y, w: 26, h: 26, color: "#e8b07a", label: "P" },
             { id: "hud", x: 50, y: 78, w: 90, h: 24, color: "#d8c48a", label: `Score ${score}` },
           ]}
-          caption="The door swaps the room colors and props. The score number stays, like DontDestroyOnLoad."
+          caption="Walk into the lamp or vase to collect. Walk into the door to swap rooms. The score stays."
         />
       </Lab>
 
       <TryThis
         items={[
-          "Collect twice, then use the door. The room changes. The score should still be 2.",
+          "Walk into the prop, then walk into the door. The room changes and you start on the new floor. The score should still be there. Jump still works in both rooms.",
           "Walk the door back. Room A returns. Score still held.",
           "Imagine score lived only on a Room A object. Loading B would wipe it.",
         ]}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pad, Playfield, useKeys } from "../../components/Playfield";
+import { Pad, Playfield, useKeys, usePlayer } from "../../components/Playfield";
 import {
   Callout,
   Chapter,
@@ -15,6 +15,7 @@ import {
 
 export function UnityFinish() {
   const [fade, setFade] = useState(1);
+  const player = usePlayer({ floor: 18, startX: 32 });
 
   const flashing = fade < 1;
   const flashMix = 1 - fade;
@@ -113,10 +114,16 @@ export function UnityFinish() {
 
       <Lab
         title="Attack flash and a fading hit"
-        explain="Attack flashes the actor, then a hit label appears and fades. The timer is a stand-in for WaitForSeconds in a coroutine."
+        explain="Walk and jump are still here. Attack flashes the actor, then a hit label appears and fades. You can keep walking while it fades, because WaitForSeconds pauses that coroutine only. The timer is a stand-in for that wait."
         controls={
           <>
-            <Pad onAction={attack} actionLabel="Attack" />
+            <Pad
+              onLeft={() => player.walk(-1)}
+              onRight={() => player.walk(1)}
+              onUp={player.jump}
+              onAction={attack}
+              actionLabel="Attack"
+            />
             <Slider
               label="Hit timer (0 is impact, 1 is gone)"
               value={fade}
@@ -135,12 +142,13 @@ export function UnityFinish() {
       >
         <Playfield
           actors={[
-            { id: "p", x: 38, y: 22, w: 32, h: 32, color: body, label: "P" },
+            { id: "floor", x: 50, y: 0, w: 520, h: 12, color: "#4a7a8c", label: "" },
+            { id: "p", x: player.x, y: player.y, w: 32, h: 32, color: body, label: "P" },
             ...(fade < 0.98
               ? [
                   {
                     id: "hit",
-                    x: 62,
+                    x: Math.min(88, player.x + 18),
                     y: hitY,
                     w: 36,
                     h: 22,
@@ -150,13 +158,13 @@ export function UnityFinish() {
                 ]
               : []),
           ]}
-          caption="Attack resets the timer. Drag the slider to step the wait, like WaitForSeconds playing out."
+          caption="Walk and jump, then Attack. You can still move while the hit fades."
         />
       </Lab>
 
       <TryThis
         items={[
-          "Press Attack. The cube should flash and a hit label should pop.",
+          "Walk to a new spot, then press Attack. The cube flashes there. Keep walking while the label fades. Jump still lands.",
           "Drag the timer toward 1. The label rises and fades, then drops off.",
           "Attack again at mid fade. The coroutine in Unity would restart the wait from zero.",
         ]}

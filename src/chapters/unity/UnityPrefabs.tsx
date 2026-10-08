@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Playfield } from "../../components/Playfield";
+import { Pad, Playfield, useKeys, usePlayer } from "../../components/Playfield";
 import {
   Callout,
   Chapter,
@@ -17,10 +17,15 @@ type Shot = { id: string; x: number; y: number };
 
 export function UnityPrefabs() {
   const [shots, setShots] = useState<Shot[]>([]);
+  const player = usePlayer({ floor: 16, startX: 18 });
 
   const spawn = (x: number, y: number) => {
     setShots((list) => [...list, { id: `s${list.length}-${x.toFixed(0)}-${y.toFixed(0)}`, x, y }]);
   };
+
+  const fire = () => spawn(player.x + 8, player.y);
+
+  useKeys({ " ": fire, f: fire });
 
   return (
     <Chapter
@@ -95,10 +100,17 @@ export function UnityPrefabs() {
       </Callout>
 
       <Lab
-        title="Click to instantiate"
-        explain="Click the dark stage to spawn a shot copy. Each click is like Instantiate. Clear destroys every live copy. The count is how many you made."
+        title="Walk, jump, then instantiate"
+        explain="Walk and jump are still here. Fire spawns a shot at the player, the way Instantiate uses this object's position. Click the stage to spawn a copy somewhere else. Clear destroys every live copy. The count is how many you made."
         controls={
           <>
+            <Pad
+              onLeft={() => player.walk(-1)}
+              onRight={() => player.walk(1)}
+              onUp={player.jump}
+              onAction={fire}
+              actionLabel="Fire"
+            />
             <button type="button" className="btn" onClick={() => setShots([])}>
               Destroy all
             </button>
@@ -111,7 +123,8 @@ export function UnityPrefabs() {
       >
         <Playfield
           actors={[
-            { id: "gun", x: 12, y: 16, w: 30, h: 22, color: "#8aa0b4", label: "gun" },
+            { id: "floor", x: 50, y: 0, w: 520, h: 12, color: "#4a7a8c", label: "" },
+            { id: "p", x: player.x, y: player.y, w: 26, h: 26, color: "#e8b07a", label: "P" },
             ...shots.map((s) => ({
               id: s.id,
               x: s.x,
@@ -123,13 +136,13 @@ export function UnityPrefabs() {
             })),
           ]}
           onStageClick={spawn}
-          caption="Click the stage to spawn. Clear removes every live copy. The count is how many Instantiate calls you made."
+          caption="Walk and jump, then Fire to spawn at the player. Click the stage to spawn somewhere else."
         />
       </Lab>
 
       <TryThis
         items={[
-          "Click four times. The shot count should be 4.",
+          "Walk to a new spot and press Fire. The shot appears at the player. Jump still returns to the floor.",
           "Click Destroy all. Instantiated copies go away. The gun stays.",
           "Spawn again after a clear. New ids, same recipe. That is a prefab.",
         ]}

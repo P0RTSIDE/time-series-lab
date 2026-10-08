@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Playfield } from "../../components/Playfield";
+import { Pad, Playfield, usePlayer } from "../../components/Playfield";
 import {
   Callout,
   Chapter,
@@ -7,23 +7,69 @@ import {
   Lab,
   Quiz,
   ScriptBlock,
+  Slider,
   Stat,
   Takeaway,
   TermList,
   TryThis,
 } from "../../components/UI";
 
-type Coin = { id: string; x: number; y: number };
+type Spawn = {
+  id: string;
+  kind: "coin" | "slime";
+  x: number;
+  y: number;
+  worth: number;
+  inTree: boolean;
+};
+
+const WORTH_COLOR = ["#9fd0f2", "#7eb6e8", "#4f97d4", "#2f78b8", "#1d5c94"];
+
+function hit(ax: number, ay: number, bx: number, by: number) {
+  const dx = ax - bx;
+  const dy = ay - by;
+  return dx * dx + dy * dy < 11 * 11;
+}
 
 export function GodotInstances() {
-  const [coins, setCoins] = useState<Coin[]>([]);
+  const [spawns, setSpawns] = useState<Spawn[]>([]);
   const [nextId, setNextId] = useState(1);
+  const [worth, setWorth] = useState(1);
+  const [kind, setKind] = useState<"coin" | "slime">("coin");
+  const [parentOnSpawn, setParentOnSpawn] = useState(true);
+  const [score, setScore] = useState(0);
+  const [stung, setStung] = useState(0);
+
+  const player = usePlayer({
+    floor: 14,
+    startX: 46,
+    onMove: (nx, ny) => setSpawns((list) => resolve(nx, ny, list)),
+  });
+
+  const inTree = spawns.filter((c) => c.inTree);
+  const orphans = spawns.filter((c) => !c.inTree);
+
+  const resolve = (nx: number, ny: number, list: Spawn[]) => {
+    const touched = list.filter((c) => c.inTree && hit(nx, ny, c.x, c.y));
+    if (touched.length === 0) return list;
+    const gained = touched.filter((c) => c.kind === "coin").reduce((s, c) => s + c.worth, 0);
+    const slimes = touched.filter((c) => c.kind === "slime").length;
+    if (gained) setScore((s) => s + gained);
+    if (slimes) setStung((n) => n + slimes);
+    const ids = new Set(touched.map((c) => c.id));
+    return list.filter((c) => !ids.has(c.id));
+  };
 
   const spawn = (x: number, y: number) => {
-    if (coins.length >= 16) return;
-    const id = `c${nextId}`;
+    if (spawns.length >= 14) return;
+    if (hit(player.x, player.y, x, y)) return;
+    const id = `n${nextId}`;
     setNextId((n) => n + 1);
-    setCoins((list) => [...list, { id, x, y }]);
+    setSpawns((list) => [...list, { id, kind, x, y, worth, inTree: parentOnSpawn }]);
+  };
+
+  const parentOrphans = () => {
+    setSpawns((list) => resolve(player.x, player.y, list.map((c) => ({ ...c, inTree: true }))));
   };
 
   return (
@@ -97,40 +143,82 @@ export function GodotInstances() {
       </Callout>
 
       <Lab
-        title="Spawn and clear"
-        explain="Click the stage to instance a coin child. Clear frees every child. The count is how many packed scenes you spawned."
+        title="Two packed scenes, one level"
+        explain="Walk and jump are still here from the body lesson. Pick a packed scene, then click the stage to instantiate it. Coin and slime are different recipes. Worth is copied onto that instance only. Walk or jump P into a copy that was add_child'd: a coin adds its own worth and frees itself, a slime stings and frees itself. Turn add_child off and the copy is an orphan. It counts, but P cannot touch it until you parent it."
         controls={
           <>
-            <button type="button" className="btn" onClick={() => setCoins([])}>
-              Clear (queue_free)
+            <div className="seg">
+              <button type="button" className={kind === "coin" ? "on" : ""} onClick={() => setKind("coin")}>
+                coin.tscn
+              </button>
+              <button type="button" className={kind === "slime" ? "on" : ""} onClick={() => setKind("slime")}>
+                slime.tscn
+              </button>
+            </div>
+            <Slider
+              label="Coin worth on next copy"
+              value={worth}
+              min={1}
+              max={5}
+              step={1}
+              onChange={setWorth}
+            />
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={parentOnSpawn}
+                onChange={(e) => setParentOnSpawn(e.target.checked)}
+              />
+              add_child on spawn
+            </label>
+            <button type="button" className="btn" onClick={parentOrphans} disabled={orphans.length === 0}>
+              Parent orphans
             </button>
+            <Pad
+              onLeft={() => player.walk(-1)}
+              onRight={() => player.walk(1)}
+              onUp={player.jump}
+              onAction={player.jump}
+              actionLabel="Jump"
+            />
             <div className="stat-row">
-              <Stat label="Children" value={String(coins.length)} />
-              <Stat label="Cap" value="16" />
+              <Stat label="In the tree" value={String(inTree.length)} />
+              <Stat label="Orphans" value={String(orphans.length)} />
+              <Stat label="Score" value={String(score)} />
+              <Stat label="Stings" value={String(stung)} />
             </div>
           </>
         }
       >
         <Playfield
-          actors={coins.map((c) => ({
-            id: c.id,
-            x: c.x,
-            y: c.y,
-            w: 22,
-            h: 22,
-            color: "#7eb6e8",
-            label: "C",
-          }))}
+          actors={[
+            { id: "floor", x: 50, y: 0, w: 520, h: 14, color: "#4a7a8c", label: "Floor" },
+            { id: "p", x: player.x, y: player.y, w: 26, h: 26, color: "#f2d48a", label: "P" },
+            ...inTree.map((c) => ({
+              id: c.id,
+              x: c.x,
+              y: c.y,
+              w: c.kind === "slime" ? 30 : 22,
+              h: c.kind === "slime" ? 22 : 22,
+              color: c.kind === "slime" ? "#d45a4a" : WORTH_COLOR[c.worth - 1],
+              label: c.kind === "slime" ? "S" : String(c.worth),
+            })),
+          ]}
           onStageClick={spawn}
-          caption="Click the stage to instance a coin. Clear frees every child."
+          caption="Click empty space to instance the selected scene. Walk or jump into it. Orphans never draw."
         />
+        <ul className="lab-log">
+          <li>Level children: Player{inTree.length ? `, ${inTree.map((c) => (c.kind === "slime" ? "Slime" : `Coin ${c.worth}`)).join(", ")}` : ""}</li>
+          <li>{orphans.length ? `${orphans.length} instantiated but not add_child'd, so they are not in that list.` : "No orphans. Every instance was parented."}</li>
+        </ul>
       </Lab>
 
       <TryThis
         items={[
-          "Click three times. The child count should be 3.",
-          "Click Clear. The count drops to 0. That is queue_free on each copy.",
-          "Fill the stage, then clear. The recipe is still there. Spawn again.",
+          "Spawn a worth-5 coin and a worth-1 coin. Walk into each. Score jumps by that copy, not by the slider.",
+          "Switch to slime.tscn, spawn one, walk into it. Stings go up. That is a different packed scene, not a recolored coin.",
+          "Turn add_child off, click twice, and walk through that spot. Nothing happens until you parent the orphans.",
+          "Jump still leaves the floor and comes back down. A coin you clicked up high is only collected if you reach it.",
         ]}
       />
 

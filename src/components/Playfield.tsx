@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export type Actor = {
   id: string;
@@ -8,6 +8,7 @@ export type Actor = {
   h?: number;
   color?: string;
   label?: string;
+  onClick?: () => void;
 };
 
 export function Playfield({
@@ -44,6 +45,13 @@ export function Playfield({
               width: a.w ?? 28,
               height: a.h ?? 28,
               background: a.color ?? "#e8b07a",
+              pointerEvents: a.onClick ? "auto" : "none",
+              cursor: a.onClick ? "pointer" : undefined,
+            }}
+            onClick={(e) => {
+              if (!a.onClick) return;
+              e.stopPropagation();
+              a.onClick();
             }}
           >
             {a.label}
@@ -92,6 +100,99 @@ export function Pad({
       )}
     </div>
   );
+}
+
+/** Walk and jump shared by later labs, so movement stays after it is introduced. */
+export function usePlayer(opts?: {
+  canJump?: boolean;
+  floor?: number;
+  startX?: number;
+  step?: number;
+  onMove?: (x: number, y: number) => void;
+}) {
+  const floor = opts?.floor ?? 16;
+  const step = opts?.step ?? 7;
+  const canJump = opts?.canJump !== false;
+  const startX = opts?.startX ?? 28;
+  const onMoveRef = useRef(opts?.onMove);
+  onMoveRef.current = opts?.onMove;
+
+  const [x, setX] = useState(startX);
+  const [y, setY] = useState(floor);
+  const [onFloor, setOnFloor] = useState(true);
+  const pos = useRef({ x: startX, y: floor });
+  const air = useRef(false);
+  const timer = useRef<number | null>(null);
+
+  const publish = (nx: number, ny: number) => {
+    pos.current = { x: nx, y: ny };
+    onMoveRef.current?.(nx, ny);
+  };
+
+  const place = (nx: number) => {
+    if (timer.current != null) window.clearTimeout(timer.current);
+    timer.current = null;
+    air.current = false;
+    setOnFloor(true);
+    setX(nx);
+    setY(floor);
+    pos.current = { x: nx, y: floor };
+  };
+
+  const walk = (dir: number) => {
+    const nx = Math.min(90, Math.max(8, pos.current.x + dir * step));
+    setX(nx);
+    publish(nx, pos.current.y);
+  };
+
+  const jump = () => {
+    if (!canJump || air.current) return;
+    air.current = true;
+    setOnFloor(false);
+    let vy = 6.2;
+    const tick = () => {
+      vy -= 0.55;
+      const next = pos.current.y + vy;
+      if (next <= floor) {
+        air.current = false;
+        setOnFloor(true);
+        setY(floor);
+        publish(pos.current.x, floor);
+        timer.current = null;
+        return;
+      }
+      setY(next);
+      publish(pos.current.x, next);
+      timer.current = window.setTimeout(tick, 28);
+    };
+    tick();
+  };
+
+  useKeys(
+    canJump
+      ? {
+          ArrowLeft: () => walk(-1),
+          a: () => walk(-1),
+          ArrowRight: () => walk(1),
+          d: () => walk(1),
+          ArrowUp: jump,
+          w: jump,
+        }
+      : {
+          ArrowLeft: () => walk(-1),
+          a: () => walk(-1),
+          ArrowRight: () => walk(1),
+          d: () => walk(1),
+        },
+  );
+
+  useEffect(() => {
+    return () => {
+      if (timer.current != null) window.clearTimeout(timer.current);
+    };
+  }, []);
+
+  return { x, y, onFloor, walk, jump, place };
 }
 
 export function useKeys(map: Record<string, () => void>) {

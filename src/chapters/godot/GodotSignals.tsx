@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Pad, Playfield } from "../../components/Playfield";
+import { useEffect, useRef, useState } from "react";
+import { Pad, Playfield, usePlayer } from "../../components/Playfield";
 import {
   Callout,
   Chapter,
@@ -18,13 +18,73 @@ export function GodotSignals() {
   const [ticks, setTicks] = useState(0);
   const [pulse, setPulse] = useState(false);
   const [pollHold, setPollHold] = useState(false);
+  const [links, setLinks] = useState(1);
+  const [holding, setHolding] = useState(false);
+  const [log, setLog] = useState<string[]>(["Nothing fired yet."]);
+  const linksRef = useRef(links);
+  const pollRef = useRef(pollHold);
+  linksRef.current = links;
+  pollRef.current = pollHold;
 
-  const press = () => setScore((s) => s + 1);
+  const note = (line: string) => setLog((prev) => [line, ...prev].slice(0, 4));
+  const inZone = useRef(false);
 
-  const tick = () => {
-    setTicks((n) => n + 1);
-    setPulse((p) => !p);
-    if (pollHold) setScore((s) => s + 1);
+  const player = usePlayer({
+    floor: 12,
+    startX: 18,
+    onMove: (nx, ny) => {
+      const near = Math.abs(nx - 76) < 9 && ny < 30;
+      if (near && !inZone.current) {
+        inZone.current = true;
+        setScore((s) => s + 1);
+        note("body_entered: +1");
+      } else if (!near && inZone.current) {
+        inZone.current = false;
+        note("body_exited");
+      }
+    },
+  });
+
+  const onPressed = () => {
+    const n = linksRef.current;
+    setScore((s) => s + n);
+    note(n === 1 ? "pressed: +1" : `pressed fired ${n} handlers: +${n}`);
+  };
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setTicks((n) => n + 1);
+      setPulse((p) => !p);
+      if (pollRef.current) {
+        setScore((s) => s + 1);
+        note("timeout poll: +1 (asking every beat)");
+      } else {
+        note("timeout: pulse only");
+      }
+    }, 900);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const holdTimer = useRef<number | null>(null);
+  const holdEnd = () => {
+    setHolding(false);
+    if (holdTimer.current != null) {
+      window.clearInterval(holdTimer.current);
+      holdTimer.current = null;
+    }
+  };
+  const holdStart = () => {
+    setHolding(true);
+    if (pollRef.current) {
+      setScore((s) => s + 1);
+      note("hold poll: +1 while down");
+      holdTimer.current = window.setInterval(() => {
+        setScore((s) => s + 1);
+        note("hold poll: +1 while down");
+      }, 280);
+    } else {
+      onPressed();
+    }
   };
 
   return (
@@ -96,8 +156,8 @@ export function GodotSignals() {
       </Callout>
 
       <Lab
-        title="Press adds, hold does not"
-        explain="Press the button once to add score. Timer ticks alone should not. That is the difference between a signal and polling every frame."
+        title="One press, a live timer, stacked connects"
+        explain="Walk and jump are still here. The timer is already running. Each timeout flips the pulse and writes a line. It does not add score unless you turn on polling. Click the button for a pressed signal: one click, one point. Walk into the area for body_entered, which fires once until you leave. Connect again and the same click runs every handler you stacked. Hold is different from pressed: with polling on, holding the button keeps adding."
         controls={
           <>
             <label className="check">
@@ -106,44 +166,96 @@ export function GodotSignals() {
                 checked={pollHold}
                 onChange={(e) => setPollHold(e.target.checked)}
               />
-              Poll: add score on each timer tick
+              Poll score on timeout and on hold
             </label>
-            <Pad onAction={press} actionLabel="Press" />
-            <button type="button" className="btn" onClick={tick}>
-              Timer tick
+            <button type="button" className="btn" onClick={() => setLinks((n) => Math.min(4, n + 1))}>
+              Connect pressed again
             </button>
+            <button type="button" className="btn ghost" onClick={() => setLinks(1)}>
+              Reset to one connect
+            </button>
+            <button
+              type="button"
+              className="btn"
+              onMouseDown={holdStart}
+              onMouseUp={holdEnd}
+              onMouseLeave={holdEnd}
+            >
+              {holding ? "Holding" : "Hold button"}
+            </button>
+            <Pad
+              onLeft={() => player.walk(-1)}
+              onRight={() => player.walk(1)}
+              onUp={player.jump}
+              onAction={player.jump}
+              actionLabel="Jump"
+            />
             <div className="stat-row">
               <Stat label="Score" value={String(score)} />
               <Stat label="Timeouts" value={String(ticks)} />
+              <Stat label="pressed handlers" value={String(links)} />
             </div>
           </>
         }
       >
         <Playfield
+          height={240}
           actors={[
-            { id: "btn", x: 28, y: 22, w: 56, h: 28, color: "#7eb6e8", label: "Btn" },
+            {
+              id: "btn",
+              x: 22,
+              y: 62,
+              w: 72,
+              h: 32,
+              color: "#7eb6e8",
+              label: "Button",
+              onClick: onPressed,
+            },
             {
               id: "tmr",
-              x: 70,
-              y: 22,
-              w: 28,
-              h: 28,
-              color: pulse ? "#d4eef8" : "#4a8aaa",
-              label: "T",
+              x: 50,
+              y: 62,
+              w: 32,
+              h: 32,
+              color: pulse ? "#f4fff9" : "#245e52",
+              label: pulse ? "on" : "off",
             },
+            {
+              id: "score",
+              x: 78,
+              y: 78,
+              w: 64,
+              h: 24,
+              color: "#1c232b",
+              label: String(score),
+            },
+            { id: "floor", x: 50, y: 0, w: 520, h: 12, color: "#4a7a8c", label: "" },
+            {
+              id: "zone",
+              x: 76,
+              y: 16,
+              w: 36,
+              h: 28,
+              color: inZone.current ? "#f0d48a" : "#3d5a4a",
+              label: "area",
+            },
+            { id: "p", x: player.x, y: player.y, w: 24, h: 24, color: "#f2d48a", label: "P" },
           ]}
-          onStageClick={(x) => {
-            if (x < 50) press();
-          }}
-          caption="Click the button or Press. Tick the timer. Score should stay put unless you poll."
+          caption="Walk and jump as before. Button is pressed. The area fires body_entered once. The square is the timer."
         />
+        <ul className="lab-log">
+          {log.map((line, i) => (
+            <li key={`${i}-${line}`}>{line}</li>
+          ))}
+        </ul>
       </Lab>
 
       <TryThis
         items={[
-          "Press three times. Score is 3. Timeouts stay at 0.",
-          "Tap Timer tick a few times. The pulse flips. Score does not move.",
-          "Tick the poll box, then tick the timer. Score now rides the hold. That is the wrong habit.",
+          "Watch the log. Timeout lines appear on their own. Score stays put.",
+          "Click Button three times. Three pressed lines, score 3.",
+          "Connect pressed again, then click once. One click adds 2. Reset the connect, turn on poll, and watch timeout start adding.",
+          "Walk into the area. Score goes up once. Walk out and back in. body_entered fires again. Jump still lands on the floor.",
         ]}
       />
 

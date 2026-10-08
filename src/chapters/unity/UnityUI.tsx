@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Playfield } from "../../components/Playfield";
+import { useRef, useState } from "react";
+import { Pad, Playfield, usePlayer } from "../../components/Playfield";
 import {
   Callout,
   Chapter,
@@ -14,6 +14,21 @@ import {
 
 export function UnityUI() {
   const [score, setScore] = useState(0);
+  const [coin, setCoin] = useState(true);
+  const taken = useRef(false);
+
+  const player = usePlayer({
+    floor: 14,
+    startX: 20,
+    onMove: (nx, ny) => {
+      if (taken.current) return;
+      if (Math.abs(nx - 68) < 8 && ny < 32) {
+        taken.current = true;
+        setCoin(false);
+        setScore((n) => n + 1);
+      }
+    },
+  });
 
   return (
     <Chapter
@@ -89,13 +104,28 @@ export function UnityUI() {
 
       <Lab
         title="A button that writes the score"
-        explain="The button stands in for On Click. Each press adds to the score panel, like updating TMP text on a Canvas."
+        explain="Walk and jump are still here. The score panel stays on the screen while you move, the way a Canvas sticks to the view. The button stands in for On Click. Walking into the coin calls the same public method."
         controls={
           <>
+            <Pad
+              onLeft={() => player.walk(-1)}
+              onRight={() => player.walk(1)}
+              onUp={player.jump}
+              onAction={player.jump}
+              actionLabel="Jump"
+            />
             <button type="button" className="btn" onClick={() => setScore((n) => n + 1)}>
               Score +1
             </button>
-            <button type="button" className="btn" onClick={() => setScore(0)}>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => {
+                setScore(0);
+                taken.current = false;
+                setCoin(true);
+              }}
+            >
               Reset
             </button>
             <div className="stat-row">
@@ -107,16 +137,21 @@ export function UnityUI() {
       >
         <Playfield
           actors={[
-            { id: "panel", x: 50, y: 36, w: 120, h: 48, color: "#d8c48a", label: `Score: ${score}` },
-            { id: "hint", x: 50, y: 12, w: 88, h: 22, color: "#8aa0b4", label: "Canvas" },
+            { id: "panel", x: 50, y: 70, w: 120, h: 36, color: "#d8c48a", label: `Score: ${score}` },
+            { id: "hint", x: 18, y: 70, w: 70, h: 22, color: "#8aa0b4", label: "Canvas" },
+            { id: "floor", x: 50, y: 0, w: 520, h: 12, color: "#4a7a8c", label: "" },
+            ...(coin
+              ? [{ id: "coin", x: 68, y: 18, w: 22, h: 22, color: "#e8c56b", label: "+1" }]
+              : []),
+            { id: "p", x: player.x, y: player.y, w: 24, h: 24, color: "#e8b07a", label: "P" },
           ]}
-          caption="The button stands in for On Click. The panel stands in for TMP text on a Canvas."
+          caption="The panel stays put while you walk. The button and the coin both add to the same score."
         />
       </Lab>
 
       <TryThis
         items={[
-          "Press Score +1 three times. The panel text should match the field.",
+          "Walk into the coin. The panel goes up by 1 and stays on screen. Jump still lands on the floor.",
           "Reset. The label should return to Score: 0, like Start calling Refresh.",
           "Imagine the method is private. The Button list would not offer it.",
         ]}

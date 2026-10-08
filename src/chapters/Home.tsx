@@ -40,9 +40,9 @@ export function Home({
         <li>
           <button type="button" className="map-card" onClick={() => go("tracker-quiz")}>
             <span className="map-num">Q</span>
-            <span className="map-title">Congressional tracker</span>
+            <span className="map-title">Blindspot Tracker</span>
             <span className="map-blurb">
-              Questions about the voting, donor, and stock timing site: stack, data, and what a signal means.
+              Questions about the political coverage site: blindspots, weekly counts, and article scores.
             </span>
             <span className="map-done">{read.includes("tracker-quiz") ? "Visited" : ""}</span>
           </button>

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Pad, Playfield } from "../../components/Playfield";
+import { useEffect, useRef, useState } from "react";
+import { Pad, Playfield, useKeys, usePlayer } from "../../components/Playfield";
 import {
   Callout,
   Chapter,
@@ -15,24 +15,77 @@ import {
 } from "../../components/UI";
 
 export function GodotFinish() {
-  const [x, setX] = useState(28);
-  const [flash, setFlash] = useState(false);
+  const player = usePlayer({ floor: 18, startX: 22 });
+  const xRef = useRef(player.x);
+  xRef.current = player.x;
+  const [lunge, setLunge] = useState(0);
   const [phase, setPhase] = useState("idle");
   const [hits, setHits] = useState(0);
-  const [ms, setMs] = useState(160);
+  const [ms, setMs] = useState(520);
+  const [useTween, setUseTween] = useState(true);
+  const [useAnim, setUseAnim] = useState(true);
+  const [useSound, setUseSound] = useState(true);
+  const [swing, setSwing] = useState(0);
+  const [soundLife, setSoundLife] = useState(0);
+  const [soundToken, setSoundToken] = useState(0);
+  const [restarts, setRestarts] = useState(0);
+  const [enemyHit, setEnemyHit] = useState(false);
+
+  const playSound = () => {
+    if (!useSound) return;
+    setRestarts((n) => (soundLife > 0.2 ? n + 1 : n));
+    setSoundToken((t) => t + 1);
+  };
 
   const attack = () => {
     if (phase !== "idle") return;
-    setPhase("lunge");
-    setFlash(true);
-    setX(52);
-    window.setTimeout(() => {
-      setHits((n) => n + 1);
-      setFlash(false);
-      setX(28);
-      setPhase("idle");
-    }, ms);
+    setPhase("windup");
+    setSwing((n) => n + 1);
+    playSound();
   };
+
+  useKeys({
+    " ": attack,
+    f: attack,
+  });
+
+  useEffect(() => {
+    if (swing === 0) return;
+    let raf = 0;
+    const t0 = performance.now();
+    const duration = useTween ? ms : 90;
+    const step = (now: number) => {
+      const u = Math.min(1, (now - t0) / duration);
+      const forward = u < 0.42 ? u / 0.42 : Math.max(0, 1 - (u - 0.42) / 0.58);
+      const eased = useTween ? forward * forward * (3 - 2 * forward) : forward > 0.5 ? 1 : 0;
+      const reach = xRef.current + eased * 34;
+      setLunge(eased * 34);
+      setPhase(u < 0.42 ? "lunge" : u < 1 ? "return" : "idle");
+      setEnemyHit(reach > 64);
+      if (u < 1) raf = requestAnimationFrame(step);
+      else {
+        setHits((n) => n + 1);
+        setLunge(0);
+        setPhase("idle");
+        setEnemyHit(false);
+      }
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [swing, ms, useTween]);
+
+  useEffect(() => {
+    if (soundToken === 0) return;
+    let raf = 0;
+    const t0 = performance.now();
+    const step = (now: number) => {
+      const u = Math.min(1, (now - t0) / 480);
+      setSoundLife(1 - u);
+      if (u < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [soundToken]);
 
   return (
     <Chapter
@@ -102,41 +155,85 @@ export function GodotFinish() {
       </Callout>
 
       <Lab
-        title="Attack tween and flash"
-        explain="Attack lunges, flashes, then returns. Stretch the tween to see the ease. Mash is gated so one attack finishes before the next starts."
+        title="Lunge, clip, and a sound that can restart"
+        explain="Walk and jump are still here. Attack eases P forward from wherever you are standing, then back. That slide is the tween. The word on P is the animation clip: idle, then lunge, then return. The ring is the hit sound. Play sound while the ring is still up and it jumps back to full size, which is play() restarting a sound that was already playing. Turn the tween off and the same attack snaps instead of easing. You can still walk during the swing. A second Attack is ignored until the tween finishes."
         controls={
           <>
-            <Slider label="Tween ms" value={ms} min={80} max={360} step={20} onChange={setMs} />
-            <Pad onAction={attack} actionLabel="Attack" />
+            <Slider label="Tween length" value={ms} min={180} max={900} step={20} onChange={setMs} />
+            <label className="check">
+              <input type="checkbox" checked={useTween} onChange={(e) => setUseTween(e.target.checked)} />
+              Tween the lunge
+            </label>
+            <label className="check">
+              <input type="checkbox" checked={useAnim} onChange={(e) => setUseAnim(e.target.checked)} />
+              Play slash clip
+            </label>
+            <label className="check">
+              <input type="checkbox" checked={useSound} onChange={(e) => setUseSound(e.target.checked)} />
+              Play hit sound
+            </label>
+            <Pad
+              onLeft={() => player.walk(-1)}
+              onRight={() => player.walk(1)}
+              onUp={player.jump}
+              onAction={attack}
+              actionLabel="Attack"
+            />
+            <button type="button" className="btn" onClick={playSound}>
+              Play sound
+            </button>
             <div className="stat-row">
-              <Stat label="Phase" value={phase} />
+              <Stat label="Clip" value={useAnim ? phase : "off"} />
               <Stat label="Hits" value={String(hits)} />
+              <Stat label="Sound restarts" value={String(restarts)} />
             </div>
           </>
         }
       >
         <Playfield
+          height={220}
           actors={[
+            ...(soundLife > 0.04
+              ? [
+                  {
+                    id: "snd",
+                    x: player.x + lunge + 8,
+                    y: 36,
+                    w: 18 + soundLife * 54,
+                    h: 18 + soundLife * 54,
+                    color: `rgba(126, 182, 232, ${0.25 + soundLife * 0.45})`,
+                    label: "snd",
+                  },
+                ]
+              : []),
             {
               id: "p",
-              x,
-              y: 16,
-              w: 28,
+              x: player.x + lunge,
+              y: player.y,
+              w: phase === "lunge" && useAnim ? 40 : 28,
               h: 28,
-              color: flash ? "#d4eef8" : "#7eb6e8",
-              label: "P",
+              color: phase === "lunge" && useAnim ? "#f4fff9" : "#7eb6e8",
+              label: useAnim ? (phase === "idle" ? "idle" : phase === "lunge" ? "slash" : "back") : "P",
             },
-            { id: "e", x: 72, y: 16, w: 28, h: 28, color: "#4a8aaa", label: "E" },
+            {
+              id: "e",
+              x: 78,
+              y: 18,
+              w: enemyHit ? 34 : 28,
+              h: enemyHit ? 34 : 28,
+              color: enemyHit ? "#f0d48a" : "#4a8aaa",
+              label: enemyHit ? "hit" : "E",
+            },
           ]}
-          caption="Attack lunges, flashes, then returns. Stretch the tween to see the ease."
+          caption="Walk and jump, then Attack eases forward from where you are. Play sound during the ring to restart it."
         />
       </Lab>
 
       <TryThis
         items={[
-          "Press Attack. P slides in, flashes, and pops back. Hits goes up by one.",
-          "Mash while it is mid-lunge. The phase gate ignores a second press.",
-          "Raise tween ms and attack again. Same motion, a slower ease.",
+          "Walk closer, then Attack with everything on. P eases forward from that spot, the clip name changes, the ring fades, then P eases back. Jump still lands on the floor.",
+          "Turn the tween off and attack again. P snaps to the enemy instead of sliding.",
+          "Attack, then press Play sound before the ring is gone. Sound restarts goes up and the ring pops back to full size.",
         ]}
       />
 

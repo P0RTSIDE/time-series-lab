@@ -1062,6 +1062,18 @@ main {
   font-size: 0.86rem;
 }
 
+.lab-log {
+  margin: 0.45rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.lab-log li {
+  margin: 0.12rem 0;
+}
+
 .pad {
   display: flex;
   flex-wrap: wrap;

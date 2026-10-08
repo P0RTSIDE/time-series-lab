@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Playfield } from "../../components/Playfield";
+import { useEffect, useRef, useState } from "react";
+import { Pad, Playfield, usePlayer } from "../../components/Playfield";
 import {
   Callout,
   Chapter,
@@ -13,26 +13,77 @@ import {
   TryThis,
 } from "../../components/UI";
 
+const HALL_COINS = [
+  { id: "h1", x: 18 },
+  { id: "h2", x: 34 },
+  { id: "h3", x: 50 },
+];
+const YARD_COINS = [
+  { id: "y1", x: 22 },
+  { id: "y2", x: 40 },
+  { id: "y3", x: 58 },
+];
+
 export function GodotAutoload() {
-  const [coins, setCoins] = useState(0);
+  const [gameCoins, setGameCoins] = useState(0);
+  const [roomScore, setRoomScore] = useState(0);
   const [room, setRoom] = useState<"hall" | "yard">("hall");
-  const [taken, setTaken] = useState({ hall: false, yard: false });
+  const [gone, setGone] = useState<Record<string, boolean>>({});
 
   const here = room === "hall";
-  const coinOut = here ? taken.hall : taken.yard;
-  const grab = () => {
-    if (coinOut) return;
-    setCoins((n) => n + 1);
-    setTaken((t) => (here ? { ...t, hall: true } : { ...t, yard: true }));
+  const roomCoins = (here ? HALL_COINS : YARD_COINS).filter((c) => !gone[c.id]);
+  const taken = useRef<Set<string>>(new Set());
+  const atDoor = useRef(false);
+  const roomNow = useRef(room);
+  roomNow.current = room;
+
+  const grab = (id: string) => {
+    if (taken.current.has(id)) return;
+    taken.current.add(id);
+    setGone((g) => ({ ...g, [id]: true }));
+    setGameCoins((n) => n + 1);
+    setRoomScore((n) => n + 1);
   };
 
-  const actors = [
-    { id: "floor", x: 50, y: 0, w: 420, h: 16, color: here ? "#3d6a7a" : "#4a8aaa", label: here ? "Hall" : "Yard" },
-    { id: "door", x: 82, y: 12, w: 36, h: 36, color: "#5a9ec9", label: "Door" },
-    ...(coinOut
-      ? []
-      : [{ id: "coin", x: here ? 22 : 48, y: 14, w: 22, h: 22, color: "#7eb6e8", label: "C" }]),
-  ];
+  const player = usePlayer({
+    floor: 16,
+    startX: 14,
+    onMove: (nx, ny) => {
+      const hereNow = roomNow.current === "hall";
+      const coins = hereNow ? HALL_COINS : YARD_COINS;
+      for (const c of coins) {
+        if (taken.current.has(c.id)) continue;
+        if (Math.abs(nx - c.x) < 8 && Math.abs(ny - 22) < 16) grab(c.id);
+      }
+      const nearDoor = nx > 80 && ny < 42;
+      if (nearDoor && !atDoor.current) {
+        atDoor.current = true;
+        enter(hereNow ? "yard" : "hall");
+      } else if (!nearDoor) {
+        atDoor.current = false;
+      }
+    },
+  });
+
+  useEffect(() => {
+    player.place(14);
+    atDoor.current = false;
+  }, [room]);
+
+  const enter = (next: "hall" | "yard") => {
+    setRoom(next);
+    setRoomScore(0);
+  };
+
+  const freeGroup = () => {
+    const ids = here ? HALL_COINS : YARD_COINS;
+    for (const c of ids) taken.current.add(c.id);
+    setGone((g) => {
+      const next = { ...g };
+      for (const c of ids) next[c.id] = true;
+      return next;
+    });
+  };
 
   return (
     <Chapter
@@ -101,45 +152,82 @@ export function GodotAutoload() {
       </Callout>
 
       <Lab
-        title="Two rooms, one count"
-        explain="Hall and yard are two rooms. Pick up a coin, take the door, and the count stays. That persistent number is the fake Autoload."
+        title="What dies with the room, what does not"
+        explain="Walk and jump still work. The Game chip stays on screen when you change rooms. That is the Autoload. The room score is a variable on the room itself, so the door sets it back to zero even though Game.coins does not. Walk into a coin or click it. Coins are in the group coins. Free group removes every coin still in this room and does not touch Game. Taken coins stay gone when you come back, because those nodes were freed, not because the Autoload forgot them."
         controls={
           <>
-            <button type="button" className="btn" onClick={() => setRoom(here ? "yard" : "hall")}>
-              {here ? "Enter yard" : "Enter hall"}
+            <Pad
+              onLeft={() => player.walk(-1)}
+              onRight={() => player.walk(1)}
+              onUp={player.jump}
+              onAction={player.jump}
+              actionLabel="Jump"
+            />
+            <button type="button" className="btn" onClick={() => enter(here ? "yard" : "hall")}>
+              {here ? "Door to yard" : "Door to hall"}
+            </button>
+            <button type="button" className="btn" onClick={freeGroup} disabled={roomCoins.length === 0}>
+              Free coins group
             </button>
             <button
               type="button"
               className="btn ghost"
               onClick={() => {
-                setCoins(0);
-                setTaken({ hall: false, yard: false });
+                taken.current = new Set();
+                setGameCoins(0);
+                setRoomScore(0);
+                setGone({});
+                setRoom("hall");
+                player.place(14);
               }}
             >
               Reset run
             </button>
             <div className="stat-row">
-              <Stat label="Game.coins" value={String(coins)} />
-              <Stat label="Room" value={here ? "hall" : "yard"} />
+              <Stat label="Game.coins" value={String(gameCoins)} />
+              <Stat label="Room score" value={String(roomScore)} />
+              <Stat label="In group" value={String(roomCoins.length)} />
             </div>
           </>
         }
       >
         <Playfield
-          actors={actors}
-          onStageClick={(x) => {
-            if (x > 72) setRoom(here ? "yard" : "hall");
-            else grab();
-          }}
-          caption="Pick up the coin, then take the door. The count is the fake Autoload. It stays."
+          height={240}
+          actors={[
+            { id: "game", x: 18, y: 72, w: 88, h: 28, color: "#1f6f62", label: `Game ${gameCoins}` },
+            { id: "local", x: 78, y: 72, w: 88, h: 28, color: here ? "#3d6a7a" : "#4a8aaa", label: `${here ? "Hall" : "Yard"} ${roomScore}` },
+            { id: "floor", x: 50, y: 4, w: 520, h: 18, color: here ? "#2c4a44" : "#3d5c38", label: here ? "hall.tscn" : "yard.tscn" },
+            {
+              id: "door",
+              x: 88,
+              y: 22,
+              w: 36,
+              h: 48,
+              color: "#c4a574",
+              label: "Door",
+              onClick: () => enter(here ? "yard" : "hall"),
+            },
+            { id: "p", x: player.x, y: player.y, w: 24, h: 24, color: "#f2d48a", label: "P" },
+            ...roomCoins.map((c) => ({
+              id: c.id,
+              x: c.x,
+              y: 22,
+              w: 26,
+              h: 26,
+              color: "#e8c56b",
+              label: "C",
+              onClick: () => grab(c.id),
+            })),
+          ]}
+          caption="Walk into a coin or click it. Walk into the door to swap rooms. Game stays. The room score does not."
         />
       </Lab>
 
       <TryThis
         items={[
-          "Grab the hall coin. Game.coins should be 1.",
-          "Enter the yard. The hall is gone. The count is still 1.",
-          "Grab the yard coin, go back. Two coins, and the hall coin stays taken.",
+          "Walk into two hall coins. Game.coins and the hall score both read 2. Jump still comes back to the floor.",
+          "Take the door. Hall score is 0. Game.coins is still 2. The yard has its own coins.",
+          "Come back. The hall coins you took are still gone. Free coins group clears the rest without adding to Game.",
         ]}
       />
 
